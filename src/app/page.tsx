@@ -70,11 +70,11 @@ export default function Home() {
       <nav className="relative z-10 p-6">
         <div className="container mx-auto flex justify-between items-center">
           <Image
-            src="/logos/Stratos Circle logo.png"
-            alt="Stratos Logo"
-            width={40}
-            height={40}
-            className="dark:invert"
+            src="/logos/Stratos Bar logo (white).png"
+            alt="Stratos Bar Logo"
+            width={128}
+            height={128}
+            
           />
           <div className="space-x-8">
             <a href="#features" className="hover:text-secondary transition-colors">Features</a>

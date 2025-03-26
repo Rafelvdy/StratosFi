@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Image from "next/image";
+import { Space_Grotesk } from 'next/font/google'
 
-
-
+const spaceGrotesk = Space_Grotesk({ 
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: "StratosFi | Rise Above Market Noise!",
@@ -16,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={spaceGrotesk.className}>
       <body>
         {children}
         <div className="fixed bottom-4 left-4">
