@@ -37,7 +37,7 @@ export default function Home() {
       { color: '#FFFFFF', weight: 50 }, // White, most common
       { color: '#CAE1FF', weight: 25 }, // Pale Blue
       { color: '#FFF4E0', weight: 15 }, // Pale Yellow
-      { color: '#FFE4E1', weight: 10 }, // Very Faint Red
+      { color: '#FFE4E1', weight: 50 }, // Very Faint Red
     ]
 
     // Get weighted random color
@@ -150,12 +150,12 @@ export default function Home() {
       {/* Space section with particles */}
       <section className="relative h-screen">
         {/* Logo with adjusted z-index to ensure it's above particles */}
-        <div className="absolute top-6 left-6 z-50">
+        <div className="absolute top-64 left-168 z-50">
           <Image
             src="/logos/Stratos Bar logo (white).png"
             alt="Stratos Logo"
-            width={150}
-            height={40}
+            width={220}
+            height={110}
             priority
             className="select-none"
           />
@@ -168,7 +168,7 @@ export default function Home() {
         <div className="relative z-20 h-full flex items-center justify-center px-6">
           <div className="max-w-4xl">
             <h1 className="text-6xl font-bold mb-6 text-white">
-              Welcome to StratosFi
+              Welcome to 
             </h1>
             <p className="text-xl mb-8 text-gray-200">
               Harness the power of AI to analyze market sentiment and automate your trading strategy
