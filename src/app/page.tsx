@@ -63,6 +63,17 @@ export default function Home() {
     <div className="relative">
       {/* Space section with particles */}
       <section className="relative h-screen">
+        {/* Add logo */}
+        <div className="absolute top-6 left-6 z-20">
+          <Image
+            src="/logos/Stratos Bar logo (white).png"
+            alt="Stratos Logo"
+            width={150}
+            height={40}
+            priority
+          />
+        </div>
+
         <canvas
           ref={canvasRef}
           className="absolute inset-0"
