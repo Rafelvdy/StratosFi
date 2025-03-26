@@ -3,6 +3,17 @@
 import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 
+interface Particle {
+  x: number
+  y: number
+  speed: number
+  size: number
+  opacity: number
+  targetOpacity: number
+  color: string
+  fadeSpeed: number
+}
+
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -21,16 +32,64 @@ export default function Home() {
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
 
-    // Particle animation with more particles and better visibility
-    const particles: Array<{x: number, y: number, speed: number, size: number}> = []
+    // Star colors with their weights (probability of appearance)
+    const starColors = [
+      { color: '#FFFFFF', weight: 50 }, // White, most common
+      { color: '#CAE1FF', weight: 25 }, // Pale Blue
+      { color: '#FFF4E0', weight: 15 }, // Pale Yellow
+      { color: '#FFE4E1', weight: 10 }, // Very Faint Red
+    ]
+
+    // Get weighted random color
+    const getRandomColor = () => {
+      const totalWeight = starColors.reduce((sum, { weight }) => sum + weight, 0)
+      let random = Math.random() * totalWeight
+      
+      for (const { color, weight } of starColors) {
+        if (random < weight) return color
+        random -= weight
+      }
+      return starColors[0].color
+    }
+
+    // Create particles with natural distribution
+    const particles: Particle[] = []
     const createParticles = () => {
-      for (let i = 0; i < 150; i++) { // Increased number of particles
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          speed: 0.2 + Math.random() * 0.3, // Slightly faster
-          size: 1 + Math.random() * 2 // Slightly larger
-        })
+      const particleCount = 80 // Reduced count for subtlety
+      
+      for (let i = 0; i < particleCount; i++) {
+        // Create clusters by occasionally grouping stars
+        const isCluster = Math.random() < 0.3
+        const baseX = Math.random() * canvas.width
+        const baseY = Math.random() * canvas.height
+        
+        if (isCluster) {
+          // Add 2-3 stars in a cluster
+          const clusterSize = Math.floor(Math.random() * 2) + 2
+          for (let j = 0; j < clusterSize; j++) {
+            particles.push({
+              x: baseX + (Math.random() - 0.5) * 30,
+              y: baseY + (Math.random() - 0.5) * 30,
+              speed: 0.05 + Math.random() * 0.1, // Slower movement
+              size: 0.5 + Math.random() * 1.5,   // Smaller sizes
+              opacity: 0,
+              targetOpacity: 0.3 + Math.random() * 0.4,
+              color: getRandomColor(),
+              fadeSpeed: 0.002 + Math.random() * 0.003
+            })
+          }
+        } else {
+          particles.push({
+            x: baseX,
+            y: baseY,
+            speed: 0.05 + Math.random() * 0.1,
+            size: 0.5 + Math.random() * 1.5,
+            opacity: 0,
+            targetOpacity: 0.3 + Math.random() * 0.4,
+            color: getRandomColor(),
+            fadeSpeed: 0.002 + Math.random() * 0.003
+          })
+        }
       }
     }
     createParticles()
@@ -40,15 +99,42 @@ export default function Home() {
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       
       particles.forEach(particle => {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)' // More visible particles
+        // Update opacity with smooth transition
+        if (particle.opacity < particle.targetOpacity) {
+          particle.opacity = Math.min(
+            particle.opacity + particle.fadeSpeed,
+            particle.targetOpacity
+          )
+        }
+
+        // Create subtle twinkling effect
+        if (Math.random() < 0.001) {
+          particle.targetOpacity = 0.3 + Math.random() * 0.4
+        }
+
+        // Draw star with current opacity
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
-        ctx.fill()
         
+        // Create subtle glow effect
+        const gradient = ctx.createRadialGradient(
+          particle.x, particle.y, 0,
+          particle.x, particle.y, particle.size * 2
+        )
+        gradient.addColorStop(0, `${particle.color}`)
+        gradient.addColorStop(1, 'transparent')
+        
+        ctx.fillStyle = gradient
+        ctx.globalAlpha = particle.opacity
+        ctx.fill()
+        ctx.globalAlpha = 1
+
+        // Move particle
         particle.y -= particle.speed
         if (particle.y < 0) {
           particle.y = canvas.height
           particle.x = Math.random() * canvas.width
+          particle.opacity = 0 // Reset opacity for fade-in
         }
       })
       
