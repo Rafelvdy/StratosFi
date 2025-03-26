@@ -16,20 +16,20 @@ export default function Home() {
     // Set canvas size
     const resizeCanvas = () => {
       canvas.width = window.innerWidth
-      canvas.height = window.innerHeight // Only viewport height for space section
+      canvas.height = window.innerHeight
     }
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
 
-    // Particle animation
+    // Particle animation with more particles and better visibility
     const particles: Array<{x: number, y: number, speed: number, size: number}> = []
     const createParticles = () => {
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 150; i++) { // Increased number of particles
         particles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          speed: 0.1 + Math.random() * 0.2,
-          size: 1 + Math.random() * 1.5
+          speed: 0.2 + Math.random() * 0.3, // Slightly faster
+          size: 1 + Math.random() * 2 // Slightly larger
         })
       }
     }
@@ -40,7 +40,7 @@ export default function Home() {
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       
       particles.forEach(particle => {
-        ctx.fillStyle = '#ffffff20'
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)' // More visible particles
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
         ctx.fill()
@@ -63,22 +63,23 @@ export default function Home() {
     <div className="relative">
       {/* Space section with particles */}
       <section className="relative h-screen">
-        {/* Add logo */}
-        <div className="absolute top-6 left-6 z-20">
+        {/* Logo with adjusted z-index to ensure it's above particles */}
+        <div className="absolute top-6 left-6 z-50">
           <Image
             src="/logos/Stratos Bar logo (white).png"
             alt="Stratos Logo"
             width={150}
             height={40}
             priority
+            className="select-none"
           />
         </div>
 
         <canvas
           ref={canvasRef}
-          className="absolute inset-0"
+          className="absolute inset-0 z-10"
         />
-        <div className="relative z-10 h-full flex items-center justify-center px-6">
+        <div className="relative z-20 h-full flex items-center justify-center px-6">
           <div className="max-w-4xl">
             <h1 className="text-6xl font-bold mb-6 text-white">
               Welcome to StratosFi
