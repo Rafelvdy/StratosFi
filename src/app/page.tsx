@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
@@ -18,6 +18,10 @@ interface Particle {
 export default function Home() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  const handleLaunchApp = useCallback(() => {
+    router.push('/chat')
+  }, [router])
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -177,12 +181,12 @@ export default function Home() {
             </p>
             <div className="space-x-4">
               <button 
-                onClick={() => router.push('/chat')}
-                className="px-8 py-3 bg-[#6C3CE9] hover:bg-opacity-80 rounded-full transition-all text-white"
+                onClick={handleLaunchApp}
+                className="px-8 py-3 bg-[#6C3CE9] hover:bg-opacity-80 active:scale-95 active:opacity-70 rounded-full transition-all duration-150 text-white transform"
               >
                 Launch App
               </button>
-              <button className="px-8 py-3 border border-[#2EFFD4] text-[#2EFFD4] hover:bg-[#2EFFD4] hover:text-black rounded-full transition-all">
+              <button className="px-8 py-3 border border-[#2EFFD4] text-[#2EFFD4] hover:bg-[#2EFFD4] hover:text-black active:scale-95 active:opacity-70 rounded-full transition-all duration-150 transform">
                 Learn More
               </button>
             </div>
@@ -238,7 +242,10 @@ export default function Home() {
               <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-200">
                 Join thousands of traders using AI-powered sentiment analysis to make better trading decisions
               </p>
-              <button className="px-8 py-3 bg-[#2EFFD4] text-black hover:bg-opacity-80 rounded-full transition-all font-bold">
+              <button 
+                onClick={handleLaunchApp}
+                className="px-8 py-3 bg-[#2EFFD4] text-black hover:bg-opacity-80 active:scale-95 active:opacity-70 rounded-full transition-all duration-150 transform font-bold"
+              >
                 Launch App
               </button>
             </div>
