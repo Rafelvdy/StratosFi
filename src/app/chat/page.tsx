@@ -16,9 +16,12 @@ interface Particle {
 
 export default function ChatPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const planetRef = useRef<HTMLDivElement>(null)
+  const animationFrameId = useRef<number | undefined>(undefined)
+  const rotationFrameId = useRef<number | undefined>(undefined)
 
   useEffect(() => {
-    if (!canvasRef.current) return
+    if (!canvasRef.current || !planetRef.current) return
     
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
@@ -93,6 +96,7 @@ export default function ChatPage() {
     createParticles()
 
     const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.fillStyle = '#000000'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       
@@ -131,39 +135,74 @@ export default function ChatPage() {
         }
       })
       
-      requestAnimationFrame(animate)
+      animationFrameId.current = requestAnimationFrame(animate)
     }
     animate()
 
-    return () => window.removeEventListener('resize', resizeCanvas)
+    // Subtle planet rotation animation
+    let rotation = 0
+    const rotatePlanet = () => {
+      if (planetRef.current) {
+        rotation += 0.02
+        planetRef.current.style.transform = `rotate(${rotation}deg)`
+        rotationFrameId.current = requestAnimationFrame(rotatePlanet)
+      }
+    }
+    rotatePlanet()
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas)
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current)
+      }
+      if (rotationFrameId.current) {
+        cancelAnimationFrame(rotationFrameId.current)
+      }
+    }
   }, [])
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Space Background */}
+    <div className="min-h-screen bg-black overflow-hidden">
+      {/* Star Field Base Layer */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 z-0"
+        className="fixed inset-0"
+        style={{ zIndex: 0 }}
       />
 
-      {/* Header */}
-      <header className="fixed top-0 w-full bg-background/80 backdrop-blur-md z-50 border-b border-white/10">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-8">
-            <Image
-              src="/logos/Stratos Bar logo (white).png"
-              alt="Stratos Logo"
-              width={240}
-              height={130}
-              priority
-              className="select-none"
-            />
-          </div>
-        </div>
-      </header>
+      {/* Content Layer with Blur */}
+      <div className="fixed inset-0" style={{ zIndex: 10 }}>
+        {/* Blur Effect */}
+        <div className="absolute inset-0 backdrop-blur-[2px]" />
 
-      {/* Navigation Panel */}
-      <div className="fixed left-0 top-0 h-screen w-[280px] bg-[#1F2937] z-40 mt-[89px] shadow-[0_0_15px_0_rgba(46,255,212,0.3)]">
+        {/* Planet Logo */}
+        <div 
+          ref={planetRef}
+          className="absolute opacity-90"
+          style={{
+            top: '15%',
+            right: '10%',
+            zIndex: 20,
+            filter: 'drop-shadow(0 0 20px rgba(46,255,212,0.2)) blur(1.5px)',
+            transition: 'transform 0.05s linear'
+          }}
+        >
+          <Image
+            src="/logos/Stratos Circle logo.png"
+            alt="Stratos Planet"
+            width={200}
+            height={200}
+            priority
+            className="select-none"
+          />
+        </div>
+      </div>
+
+      {/* Floating Navigation Panel */}
+      <div 
+        className="fixed left-6 top-6 h-[calc(100vh-48px)] w-[280px] bg-[#1F2937] rounded-xl shadow-[0_0_15px_0_rgba(46,255,212,0.3)]"
+        style={{ zIndex: 40 }}
+      >
         <div className="p-8">
           <h2 className="text-2xl font-semibold text-white mb-8">Navigation</h2>
           <nav className="space-y-2">
