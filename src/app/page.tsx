@@ -3,7 +3,11 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { PageTransition } from './components/PageTransition'
+import dynamic from 'next/dynamic'
+import { TransitionLayout } from './components/TransitionLayout'
+
+// Dynamically import the chat page with no SSR to prevent hydration issues
+const ChatPage = dynamic(() => import('./chat/page'), { ssr: false })
 
 interface Particle {
   x: number
@@ -20,23 +24,14 @@ export default function Home() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
-  const [nextPageReady, setNextPageReady] = useState(false)
 
   const handleLaunchApp = useCallback(() => {
     setIsTransitioning(true)
-    // Preload the next page
-    router.prefetch('/chat')
-    // Simulate page load time
-    setTimeout(() => {
-      setNextPageReady(true)
-    }, 500)
-  }, [router])
+  }, [])
 
   const handleTransitionComplete = useCallback(() => {
-    if (nextPageReady) {
-      router.push('/chat')
-    }
-  }, [router, nextPageReady])
+    router.push('/chat')
+  }, [router])
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -166,7 +161,7 @@ export default function Home() {
     return () => window.removeEventListener('resize', resizeCanvas)
   }, [])
 
-  return (
+  const homeContent = (
     <div className="relative">
       {/* Space section with particles */}
       <section className="relative h-screen">
@@ -267,10 +262,16 @@ export default function Home() {
           </div>
         </section>
       </div>
-
-      {isTransitioning && (
-        <PageTransition onTransitionComplete={handleTransitionComplete} />
-      )}
     </div>
+  )
+
+  return (
+    <TransitionLayout
+      isTransitioning={isTransitioning}
+      onTransitionComplete={handleTransitionComplete}
+      nextPage={<ChatPage />}
+    >
+      {homeContent}
+    </TransitionLayout>
   )
 }
