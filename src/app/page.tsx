@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 interface Particle {
   x: number
@@ -15,6 +16,7 @@ interface Particle {
 }
 
 export default function Home() {
+  const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -174,8 +176,11 @@ export default function Home() {
               Harness the power of AI to analyze market sentiment and automate your trading strategy
             </p>
             <div className="space-x-4">
-              <button className="px-8 py-3 bg-[#6C3CE9] hover:bg-opacity-80 rounded-full transition-all text-white">
-                Get Started
+              <button 
+                onClick={() => router.push('/chat')}
+                className="px-8 py-3 bg-[#6C3CE9] hover:bg-opacity-80 rounded-full transition-all text-white"
+              >
+                Launch App
               </button>
               <button className="px-8 py-3 border border-[#2EFFD4] text-[#2EFFD4] hover:bg-[#2EFFD4] hover:text-black rounded-full transition-all">
                 Learn More
@@ -234,7 +239,7 @@ export default function Home() {
                 Join thousands of traders using AI-powered sentiment analysis to make better trading decisions
               </p>
               <button className="px-8 py-3 bg-[#2EFFD4] text-black hover:bg-opacity-80 rounded-full transition-all font-bold">
-                Get Started Now
+                Launch App
               </button>
             </div>
           </div>

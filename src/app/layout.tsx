@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import "./globals.css";
 import Image from "next/image";
 import { Space_Grotesk } from 'next/font/google'
@@ -8,7 +7,7 @@ const spaceGrotesk = Space_Grotesk({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "StratosFi | Rise Above Market Noise!",
   description: "Rise Above Market Noise!",
 };
