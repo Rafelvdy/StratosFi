@@ -81,9 +81,9 @@ export const TransitionLayout = ({
   }
 
   const bars = [
-    { color: '#2EFFD4', height: '33vh', zIndex: 53 },
-    { color: '#4D7EFF', height: '66vh', zIndex: 52 },
-    { color: '#6C3CE9', height: '90vh', zIndex: 51 },
+    { color: '#2EFFD4', height: '40vh', zIndex: 53 },
+    { color: '#4D7EFF', height: '75vh', zIndex: 52 },
+    { color: '#6C3CE9', height: '100vh', zIndex: 51 },
   ]
 
   return (
