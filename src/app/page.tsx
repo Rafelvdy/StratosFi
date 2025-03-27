@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { PageTransition } from './components/PageTransition'
 
 interface Particle {
   x: number
@@ -18,10 +19,24 @@ interface Particle {
 export default function Home() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [nextPageReady, setNextPageReady] = useState(false)
 
   const handleLaunchApp = useCallback(() => {
-    router.push('/chat')
+    setIsTransitioning(true)
+    // Preload the next page
+    router.prefetch('/chat')
+    // Simulate page load time
+    setTimeout(() => {
+      setNextPageReady(true)
+    }, 500)
   }, [router])
+
+  const handleTransitionComplete = useCallback(() => {
+    if (nextPageReady) {
+      router.push('/chat')
+    }
+  }, [router, nextPageReady])
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -252,6 +267,10 @@ export default function Home() {
           </div>
         </section>
       </div>
+
+      {isTransitioning && (
+        <PageTransition onTransitionComplete={handleTransitionComplete} />
+      )}
     </div>
   )
 }
