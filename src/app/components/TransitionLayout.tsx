@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, ReactNode } from 'react'
+import { useState, useEffect, ReactNode, useRef } from 'react'
 
 interface TransitionLayoutProps {
   children: ReactNode
@@ -18,6 +18,16 @@ export const TransitionLayout = ({
 }: TransitionLayoutProps) => {
   const [animationPhase, setAnimationPhase] = useState<'initial' | 'extend' | 'swap' | 'retract'>('initial')
   const [showNextPage, setShowNextPage] = useState(false)
+  const isComponentMounted = useRef(true)
+  const timers = useRef<Array<NodeJS.Timeout>>([])
+
+  useEffect(() => {
+    return () => {
+      isComponentMounted.current = false
+      timers.current.forEach(timer => clearTimeout(timer))
+      timers.current = []
+    }
+  }, [])
 
   useEffect(() => {
     if (!isTransitioning) {
@@ -26,29 +36,38 @@ export const TransitionLayout = ({
       return
     }
 
+    // Clear any existing timers
+    timers.current.forEach(timer => clearTimeout(timer))
+    timers.current = []
+
     // Phase 1: Extend bars
     setAnimationPhase('extend')
 
     // Phase 2: Swap pages
     const swapTimer = setTimeout(() => {
+      if (!isComponentMounted.current) return
       setAnimationPhase('swap')
       setShowNextPage(true)
-    }, 700) // 500ms extension + 200ms buffer
+    }, 700)
+    timers.current.push(swapTimer)
 
     // Phase 3: Retract bars
     const retractTimer = setTimeout(() => {
+      if (!isComponentMounted.current) return
       setAnimationPhase('retract')
-    }, 900) // 700ms + 200ms swap duration
+    }, 900)
+    timers.current.push(retractTimer)
 
     // Complete transition
     const completeTimer = setTimeout(() => {
+      if (!isComponentMounted.current) return
       onTransitionComplete()
-    }, 1400) // 900ms + 500ms retraction
+    }, 1400)
+    timers.current.push(completeTimer)
 
     return () => {
-      clearTimeout(swapTimer)
-      clearTimeout(retractTimer)
-      clearTimeout(completeTimer)
+      timers.current.forEach(timer => clearTimeout(timer))
+      timers.current = []
     }
   }, [isTransitioning, onTransitionComplete])
 

@@ -17,8 +17,11 @@ interface Particle {
 export default function ChatPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const planetRef = useRef<HTMLDivElement>(null)
-  const animationFrameId = useRef<number | undefined>(undefined)
-  const rotationFrameId = useRef<number | undefined>(undefined)
+  const animationFrameId = useRef<number | null>(null)
+  const rotationFrameId = useRef<number | null>(null)
+  const isComponentMounted = useRef(true)
+  const particles = useRef<Particle[]>([])
+  const rotationAngle = useRef(0)
 
   useEffect(() => {
     if (!canvasRef.current || !planetRef.current) return
@@ -26,14 +29,6 @@ export default function ChatPage() {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-
-    // Set canvas size
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
 
     // Star colors with their weights
     const starColors = [
@@ -55,52 +50,48 @@ export default function ChatPage() {
       return starColors[0].color
     }
 
-    // Create particles
-    const particles: Particle[] = []
-    const createParticles = () => {
-      const particleCount = 80
-      
-      for (let i = 0; i < particleCount; i++) {
-        const isCluster = Math.random() < 0.3
-        const baseX = Math.random() * canvas.width
-        const baseY = Math.random() * canvas.height
-        
-        if (isCluster) {
-          const clusterSize = Math.floor(Math.random() * 2) + 2
-          for (let j = 0; j < clusterSize; j++) {
-            particles.push({
-              x: baseX + (Math.random() - 0.5) * 30,
-              y: baseY + (Math.random() - 0.5) * 30,
-              speed: 0.05 + Math.random() * 0.1,
-              size: 0.5 + Math.random() * 1.5,
-              opacity: 0,
-              targetOpacity: 0.3 + Math.random() * 0.4,
-              color: getRandomColor(),
-              fadeSpeed: 0.002 + Math.random() * 0.003
-            })
-          }
-        } else {
-          particles.push({
-            x: baseX,
-            y: baseY,
-            speed: 0.05 + Math.random() * 0.1,
-            size: 0.5 + Math.random() * 1.5,
-            opacity: 0,
-            targetOpacity: 0.3 + Math.random() * 0.4,
-            color: getRandomColor(),
-            fadeSpeed: 0.002 + Math.random() * 0.003
-          })
-        }
-      }
+    // Initialize particles with memory management
+    const initParticles = () => {
+      if (!isComponentMounted.current) return
+      particles.current = Array.from({ length: 80 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 0.5 + Math.random(),
+        speed: 0.05 + Math.random() * 0.1,
+        color: getRandomColor(),
+        opacity: 0,
+        targetOpacity: 0.3 + Math.random() * 0.4,
+        fadeSpeed: 0.01
+      }))
     }
-    createParticles()
+
+    // Initialize first set of particles
+    initParticles()
+
+    // Set canvas size with cleanup
+    const resizeCanvas = () => {
+      if (!isComponentMounted.current || !canvas) return
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+      // Clear particles and regenerate on resize to prevent visual artifacts
+      particles.current = []
+      initParticles()
+    }
+
+    // Set up initial canvas size and event listener
+    resizeCanvas()
+    window.addEventListener('resize', resizeCanvas)
 
     const animate = () => {
+      if (!isComponentMounted.current || !ctx || !canvas) return
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.fillStyle = '#000000'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       
-      particles.forEach(particle => {
+      particles.current.forEach(particle => {
+        if (!isComponentMounted.current) return
+
         if (particle.opacity < particle.targetOpacity) {
           particle.opacity = Math.min(
             particle.opacity + particle.fadeSpeed,
@@ -119,7 +110,7 @@ export default function ChatPage() {
           particle.x, particle.y, 0,
           particle.x, particle.y, particle.size * 2
         )
-        gradient.addColorStop(0, `${particle.color}`)
+        gradient.addColorStop(0, particle.color)
         gradient.addColorStop(1, 'transparent')
         
         ctx.fillStyle = gradient
@@ -135,28 +126,49 @@ export default function ChatPage() {
         }
       })
       
-      animationFrameId.current = requestAnimationFrame(animate)
+      if (isComponentMounted.current) {
+        animationFrameId.current = requestAnimationFrame(animate)
+      }
     }
     animate()
 
-    // Subtle planet rotation animation
-    let rotation = 0
+    // Subtle planet rotation animation with memory management
     const rotatePlanet = () => {
-      if (planetRef.current) {
-        rotation += 0.02
-        planetRef.current.style.transform = `rotate(${rotation}deg)`
+      if (!isComponentMounted.current || !planetRef.current) return
+      
+      rotationAngle.current += 0.02
+      planetRef.current.style.transform = `rotate(${rotationAngle.current}deg)`
+      
+      if (isComponentMounted.current) {
         rotationFrameId.current = requestAnimationFrame(rotatePlanet)
       }
     }
     rotatePlanet()
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas)
-      if (animationFrameId.current) {
+      isComponentMounted.current = false
+      
+      if (animationFrameId.current !== null) {
         cancelAnimationFrame(animationFrameId.current)
+        animationFrameId.current = null
       }
-      if (rotationFrameId.current) {
+      
+      if (rotationFrameId.current !== null) {
         cancelAnimationFrame(rotationFrameId.current)
+        rotationFrameId.current = null
+      }
+      
+      window.removeEventListener('resize', resizeCanvas)
+      
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+      }
+      
+      particles.current = []
+      rotationAngle.current = 0
+      
+      if (planetRef.current) {
+        planetRef.current.style.transform = 'rotate(0deg)'
       }
     }
   }, [])

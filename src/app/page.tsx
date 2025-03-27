@@ -23,27 +23,44 @@ interface Particle {
 export default function Home() {
   const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animationFrameId = useRef<number | null>(null)
+  const isComponentMounted = useRef(true)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const particles = useRef<Particle[]>([])
 
   const handleLaunchApp = useCallback(() => {
+    if (animationFrameId.current !== null) {
+      cancelAnimationFrame(animationFrameId.current)
+      animationFrameId.current = null
+    }
     setIsTransitioning(true)
   }, [])
 
   const handleTransitionComplete = useCallback(() => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d')
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+      }
+    }
+    particles.current = []
     router.push('/chat')
   }, [router])
 
   useEffect(() => {
     if (!canvasRef.current) return
-    
+
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Set canvas size
+    // Set canvas size with cleanup
     const resizeCanvas = () => {
+      if (!isComponentMounted.current || !canvas) return
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
+      // Clear particles and regenerate on resize to prevent visual artifacts
+      particles.current = []
     }
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
@@ -68,54 +85,32 @@ export default function Home() {
       return starColors[0].color
     }
 
-    // Create particles with natural distribution
-    const particles: Particle[] = []
-    const createParticles = () => {
-      const particleCount = 80 // Reduced count for subtlety
-      
-      for (let i = 0; i < particleCount; i++) {
-        // Create clusters by occasionally grouping stars
-        const isCluster = Math.random() < 0.3
-        const baseX = Math.random() * canvas.width
-        const baseY = Math.random() * canvas.height
-        
-        if (isCluster) {
-          // Add 2-3 stars in a cluster
-          const clusterSize = Math.floor(Math.random() * 2) + 2
-          for (let j = 0; j < clusterSize; j++) {
-            particles.push({
-              x: baseX + (Math.random() - 0.5) * 30,
-              y: baseY + (Math.random() - 0.5) * 30,
-              speed: 0.05 + Math.random() * 0.1, // Slower movement
-              size: 0.5 + Math.random() * 1.5,   // Smaller sizes
-              opacity: 0,
-              targetOpacity: 0.3 + Math.random() * 0.4,
-              color: getRandomColor(),
-              fadeSpeed: 0.002 + Math.random() * 0.003
-            })
-          }
-        } else {
-          particles.push({
-            x: baseX,
-            y: baseY,
-            speed: 0.05 + Math.random() * 0.1,
-            size: 0.5 + Math.random() * 1.5,
-            opacity: 0,
-            targetOpacity: 0.3 + Math.random() * 0.4,
-            color: getRandomColor(),
-            fadeSpeed: 0.002 + Math.random() * 0.003
-          })
-        }
-      }
+    // Initialize particles with memory management
+    const initParticles = () => {
+      if (!isComponentMounted.current) return
+      particles.current = Array.from({ length: 80 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 0.5 + Math.random(),
+        speed: 0.05 + Math.random() * 0.1,
+        color: getRandomColor(),
+        opacity: 0,
+        targetOpacity: 0.3 + Math.random() * 0.4,
+        fadeSpeed: 0.01
+      }))
     }
-    createParticles()
+    initParticles()
 
     const animate = () => {
+      if (!isComponentMounted.current || !ctx || !canvas) return
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.fillStyle = '#000000'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       
-      particles.forEach(particle => {
-        // Update opacity with smooth transition
+      particles.current.forEach(particle => {
+        if (!isComponentMounted.current) return
+
         if (particle.opacity < particle.targetOpacity) {
           particle.opacity = Math.min(
             particle.opacity + particle.fadeSpeed,
@@ -123,21 +118,18 @@ export default function Home() {
           )
         }
 
-        // Create subtle twinkling effect
         if (Math.random() < 0.001) {
           particle.targetOpacity = 0.3 + Math.random() * 0.4
         }
 
-        // Draw star with current opacity
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
         
-        // Create subtle glow effect
         const gradient = ctx.createRadialGradient(
           particle.x, particle.y, 0,
           particle.x, particle.y, particle.size * 2
         )
-        gradient.addColorStop(0, `${particle.color}`)
+        gradient.addColorStop(0, particle.color)
         gradient.addColorStop(1, 'transparent')
         
         ctx.fillStyle = gradient
@@ -145,21 +137,33 @@ export default function Home() {
         ctx.fill()
         ctx.globalAlpha = 1
 
-        // Move particle
         particle.y -= particle.speed
         if (particle.y < 0) {
           particle.y = canvas.height
           particle.x = Math.random() * canvas.width
-          particle.opacity = 0 // Reset opacity for fade-in
+          particle.opacity = 0
         }
       })
       
-      requestAnimationFrame(animate)
+      if (isComponentMounted.current && !isTransitioning) {
+        animationFrameId.current = requestAnimationFrame(animate)
+      }
     }
     animate()
 
-    return () => window.removeEventListener('resize', resizeCanvas)
-  }, [])
+    return () => {
+      isComponentMounted.current = false
+      if (animationFrameId.current !== null) {
+        cancelAnimationFrame(animationFrameId.current)
+        animationFrameId.current = null
+      }
+      window.removeEventListener('resize', resizeCanvas)
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+      }
+      particles.current = []
+    }
+  }, [isTransitioning])
 
   const homeContent = (
     <div className="relative">
