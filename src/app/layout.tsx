@@ -1,9 +1,9 @@
 'use client'
 
 import "./globals.css";
-import Image from "next/image";
 import { Space_Grotesk } from 'next/font/google'
 import { usePathname } from 'next/navigation'
+import { SolanaWalletProvider } from "./providers/WalletProvider";
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ['latin'],
@@ -12,24 +12,27 @@ const spaceGrotesk = Space_Grotesk({
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  const pathname = usePathname()
-  const isHomePage = pathname === '/'
+}) {
+  const isHomePage = usePathname() === '/';
 
   return (
     <html lang="en" className={spaceGrotesk.className}>
       <body>
-        {children}
+        <SolanaWalletProvider>
+          {children}
+        </SolanaWalletProvider>
         {isHomePage && (
           <div className="fixed bottom-4 left-4">
-            <Image
-              src="/logos/Stratos Circle logo.png"
-              alt="Circle Logo"
-              width={128}
-              height={128}
-            />
+            <a
+              href="https://github.com/stratosfi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/50 hover:text-white transition-colors"
+            >
+              GitHub
+            </a>
           </div>
         )}
       </body>

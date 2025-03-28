@@ -1,4 +1,6 @@
-export const metadata = {
-  title: "StratosFi | Rise Above Market Noise!",
-  description: "Rise Above Market Noise!",
-}; 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "StratosFi",
+  description: "StratosFi - Rise Above Market Noise",
+};

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ChatPanel } from '../components/ChatPanel'
 import { TradingBotPanel } from '../components/TradingBotPanel'
+import { WalletPanel } from '../components/WalletPanel'
+import { useWallet } from '@solana/wallet-adapter-react'
 
 interface Particle {
   x: number
@@ -26,6 +28,8 @@ export default function ChatPage() {
   const rotationAngle = useRef(0)
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false)
   const [isTradingBotPanelOpen, setIsTradingBotPanelOpen] = useState(false)
+  const [isWalletPanelOpen, setIsWalletPanelOpen] = useState(false)
+  const { connected, publicKey } = useWallet()
 
   useEffect(() => {
     if (!canvasRef.current || !planetRef.current) return
@@ -177,16 +181,12 @@ export default function ChatPage() {
     }
   }, [])
 
-  const toggleChatPanel = () => {
-    setIsChatPanelOpen(prev => !prev)
-  }
-
-  const toggleTradingBotPanel = () => {
-    setIsTradingBotPanelOpen(prev => !prev)
-  }
+  const toggleChatPanel = () => setIsChatPanelOpen(!isChatPanelOpen)
+  const toggleTradingBotPanel = () => setIsTradingBotPanelOpen(!isTradingBotPanelOpen)
+  const toggleWalletPanel = () => setIsWalletPanelOpen(!isWalletPanelOpen)
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
+    <div className="relative min-h-screen bg-[#0A0A0A] text-white">
       {/* Star Field Base Layer */}
       <canvas
         ref={canvasRef}
@@ -281,27 +281,50 @@ export default function ChatPage() {
         {/* Wallet Connection Button */}
         <div className="absolute bottom-6 left-6 right-6">
           <div className="relative group">
-            {/* Status Indicator */}
-            <div className="absolute -top-12 right-0 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 translate-y-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 whitespace-nowrap backdrop-blur-sm border border-[#6C3CE9]/20 flex items-center space-x-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#FF4B4B]"></div>
-              <span className="text-sm text-[#FF4B4B]">Disconnected</span>
-            </div>
-
-            <button 
-              className="w-full flex items-center px-6 py-4 rounded-xl text-white transition-all duration-300 hover:scale-[1.02] bg-[#1F2937] hover:bg-[#1F2937]/80 border border-[#6C3CE9]/20"
-              onClick={() => {
-                // Wallet connection logic will go here
-                console.log('Connect wallet clicked')
-              }}
+            <button
+              onClick={toggleWalletPanel}
+              className={`flex items-center gap-4 px-6 py-3 bg-[#1A1A1A] hover:bg-[#2A2A2A] rounded-xl border border-[#2A2A2A] transition-all duration-200 group relative ${
+                isWalletPanelOpen ? 'bg-[#2A2A2A]' : ''
+              }`}
             >
-              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#6C3CE9]/10 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-[#2EFFD4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              <div className="w-10 h-10 rounded-full bg-[#6C3CE9]/10 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-[#2EFFD4]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21 7V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V7C3 4 4.5 2 8 2H16C19.5 2 21 4 21 7Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M15.5 2V9.85999C15.5 10.3 14.98 10.52 14.66 10.23L12.34 8.09003C12.15 7.91003 11.85 7.91003 11.66 8.09003L9.34003 10.23C9.02003 10.52 8.5 10.3 8.5 9.85999V2H15.5Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Connect</span>
-                <span className="text-sm font-medium -mt-1">Wallet</span>
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-medium">
+                  {connected
+                    ? `${publicKey?.toBase58().slice(0, 4)}...${publicKey?.toBase58().slice(-4)}`
+                    : 'Connect Wallet'}
+                </span>
+                <div
+                  className="absolute top-0 -translate-y-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                  style={{ marginTop: '-8px' }}
+                >
+                  <div className="bg-[#2A2A2A] px-3 py-1 rounded-lg text-sm whitespace-nowrap flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${connected ? 'bg-[#2EFFD4]' : 'bg-red-500'}`} />
+                    {connected ? 'Connected' : 'Disconnected'}
+                  </div>
+                </div>
               </div>
             </button>
           </div>
@@ -319,6 +342,8 @@ export default function ChatPage() {
         isOpen={isTradingBotPanelOpen} 
         onClose={() => setIsTradingBotPanelOpen(false)} 
       />
+
+      <WalletPanel isOpen={isWalletPanelOpen} onClose={() => setIsWalletPanelOpen(false)} />
     </div>
   )
 } 
