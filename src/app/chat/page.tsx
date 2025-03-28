@@ -224,12 +224,12 @@ export default function ChatPage() {
 
       {/* Floating Navigation Panel */}
       <div 
-        className="fixed left-6 top-6 h-[calc(100vh-48px)] w-[280px] bg-[#1F2937] rounded-xl shadow-[0_0_15px_0_rgba(46,255,212,0.3)]"
+        className="fixed left-6 top-6 h-[calc(100vh-48px)] w-[280px] bg-[#1F2937] rounded-xl shadow-[0_0_15px_0_rgba(46,255,212,0.3)] relative"
         style={{ zIndex: 40 }}
       >
         <div className="p-8">
           <h2 className="text-2xl font-semibold text-white mb-8">Navigation</h2>
-          <nav className="flex flex-col space-y-6">
+          <nav className="flex flex-col items-center space-y-6">
             <div className="relative group">
               <button 
                 className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 ${
@@ -276,6 +276,35 @@ export default function ChatPage() {
               </button>
             </div>
           </nav>
+        </div>
+
+        {/* Wallet Connection Button */}
+        <div className="absolute bottom-6 left-6 right-6">
+          <div className="relative group">
+            {/* Status Indicator */}
+            <div className="absolute -top-12 right-0 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 translate-y-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 whitespace-nowrap backdrop-blur-sm border border-[#6C3CE9]/20 flex items-center space-x-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FF4B4B]"></div>
+              <span className="text-sm text-[#FF4B4B]">Disconnected</span>
+            </div>
+
+            <button 
+              className="w-full flex items-center px-6 py-4 rounded-xl text-white transition-all duration-300 hover:scale-[1.02] bg-[#1F2937] hover:bg-[#1F2937]/80 border border-[#6C3CE9]/20"
+              onClick={() => {
+                // Wallet connection logic will go here
+                console.log('Connect wallet clicked')
+              }}
+            >
+              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#6C3CE9]/10 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-[#2EFFD4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">Connect</span>
+                <span className="text-sm font-medium -mt-1">Wallet</span>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
