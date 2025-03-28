@@ -28,6 +28,15 @@ export default function Home() {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const particles = useRef<Particle[]>([])
 
+  // Reset state when component mounts
+  useEffect(() => {
+    isComponentMounted.current = true
+    setIsTransitioning(false)
+    return () => {
+      isComponentMounted.current = false
+    }
+  }, [])
+
   const handleLaunchApp = useCallback(() => {
     if (animationFrameId.current !== null) {
       cancelAnimationFrame(animationFrameId.current)
@@ -67,7 +76,7 @@ export default function Home() {
 
     // Star colors with their weights (probability of appearance)
     const starColors = [
-      { color: '#FFFFFF', weight: 50 }, // White, most common
+      { color: '#FFFFFF', weight: 60 }, // White, most common
       { color: '#CAE1FF', weight: 25 }, // Pale Blue
       { color: '#FFF4E0', weight: 15 }, // Pale Yellow
       { color: '#FFE4E1', weight: 50 }, // Very Faint Red

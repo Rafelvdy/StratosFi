@@ -1,6 +1,9 @@
+'use client'
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useState, useEffect } from 'react';
 
 interface WalletPanelProps {
   isOpen: boolean;
@@ -9,6 +12,12 @@ interface WalletPanelProps {
 
 export function WalletPanel({ isOpen, onClose }: WalletPanelProps) {
   const { connected, publicKey } = useWallet();
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset error when panel opens/closes
+  useEffect(() => {
+    setError(null);
+  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -34,6 +43,11 @@ export function WalletPanel({ isOpen, onClose }: WalletPanelProps) {
               </div>
               <div className="flex-1 p-6">
                 <div className="space-y-4">
+                  {error && (
+                    <div className="text-red-400 text-sm mb-4">
+                      {error}
+                    </div>
+                  )}
                   {connected ? (
                     <div className="text-green-400">
                       Connected: {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}

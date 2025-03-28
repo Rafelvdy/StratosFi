@@ -21,7 +21,11 @@ export const TransitionLayout = ({
   const isComponentMounted = useRef(true)
   const timers = useRef<Array<NodeJS.Timeout>>([])
 
+  // Reset state when component mounts
   useEffect(() => {
+    isComponentMounted.current = true
+    setAnimationPhase('initial')
+    setShowNextPage(false)
     return () => {
       isComponentMounted.current = false
       timers.current.forEach(timer => clearTimeout(timer))

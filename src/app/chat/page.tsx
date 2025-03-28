@@ -31,6 +31,15 @@ export default function ChatPage() {
   const [isWalletPanelOpen, setIsWalletPanelOpen] = useState(false)
   const { connected, publicKey } = useWallet()
 
+  // Reset state when component mounts
+  useEffect(() => {
+    isComponentMounted.current = true
+    rotationAngle.current = 0
+    return () => {
+      isComponentMounted.current = false
+    }
+  }, [])
+
   useEffect(() => {
     if (!canvasRef.current || !planetRef.current) return
     
@@ -283,7 +292,7 @@ export default function ChatPage() {
           <div className="relative group">
             <button
               onClick={toggleWalletPanel}
-              className={`flex items-center gap-4 px-6 py-3 bg-[#1A1A1A] hover:bg-[#2A2A2A] rounded-xl border border-[#2A2A2A] transition-all duration-200 group relative ${
+              className={`w-full flex items-center justify-center gap-4 px-6 py-3 bg-[#1A1A1A] hover:bg-[#2A2A2A] rounded-xl border border-[#2A2A2A] transition-all duration-200 group relative ${
                 isWalletPanelOpen ? 'bg-[#2A2A2A]' : ''
               }`}
             >
@@ -310,7 +319,7 @@ export default function ChatPage() {
                   />
                 </svg>
               </div>
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-center">
                 <span className="text-sm font-medium">
                   {connected
                     ? `${publicKey?.toBase58().slice(0, 4)}...${publicKey?.toBase58().slice(-4)}`
