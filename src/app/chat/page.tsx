@@ -229,18 +229,32 @@ export default function ChatPage() {
       >
         <div className="p-8">
           <h2 className="text-2xl font-semibold text-white mb-8">Navigation</h2>
-          <nav className="space-y-2">
+          <nav className="flex flex-col h-[calc(100vh-220px)] space-y-4">
             <button 
-              className={`w-full text-left px-6 py-3 rounded-lg text-white transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)] ${isChatPanelOpen ? 'bg-[#6C3CE9] hover:bg-[#6C3CE9]/90' : 'bg-[#6C3CE9]/20 hover:bg-[#6C3CE9]/30'}`}
+              className={`w-full flex-1 flex flex-col items-center justify-center px-6 py-6 rounded-lg text-white transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)] ${isChatPanelOpen ? 'bg-[#6C3CE9] hover:bg-[#6C3CE9]/90' : 'bg-[#6C3CE9]/20 hover:bg-[#6C3CE9]/30'}`}
               onClick={toggleChatPanel}
             >
-              Chatbot
+              <Image
+                src="/icons/chat bot icon.png"
+                alt="Chatbot"
+                width={256}
+                height={256}
+                className="mb-4"
+              />
+              <span>Chatbot</span>
             </button>
             <button 
-              className={`w-full text-left px-6 py-3 rounded-lg text-white transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)] ${isTradingBotPanelOpen ? 'bg-[#6C3CE9] hover:bg-[#6C3CE9]/90' : 'bg-[#6C3CE9]/20 hover:bg-[#6C3CE9]/30'}`}
+              className={`w-full flex-1 flex flex-col items-center justify-center px-6 py-6 rounded-lg text-white transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)] ${isTradingBotPanelOpen ? 'bg-[#6C3CE9] hover:bg-[#6C3CE9]/90' : 'bg-[#6C3CE9]/20 hover:bg-[#6C3CE9]/30'}`}
               onClick={toggleTradingBotPanel}
             >
-              Trading Bot
+              <Image
+                src="/icons/trading bot icon.png"
+                alt="Trading Bot"
+                width={256}
+                height={256}
+                className="mb-4"
+              />
+              <span>Trading Bot</span>
             </button>
           </nav>
         </div>

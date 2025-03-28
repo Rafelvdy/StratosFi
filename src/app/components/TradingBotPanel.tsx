@@ -44,7 +44,7 @@ export const TradingBotPanel = ({ isOpen, onClose }: TradingBotPanelProps) => {
     expanded: {
       x: '0%',
       opacity: 1,
-      width: 'calc(100vw - 352px)', // 304px (nav width + gap) + 24px right margin + 24px gap between panels
+      width: 'calc(100vw - 385px)', // 304px (nav width + gap) + 24px right margin + 24px gap between panels
       transition: {
         type: 'spring',
         stiffness: 300,
