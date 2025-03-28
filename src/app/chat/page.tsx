@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { ChatPanel } from '../components/ChatPanel'
 
 interface Particle {
   x: number
@@ -22,6 +23,7 @@ export default function ChatPage() {
   const isComponentMounted = useRef(true)
   const particles = useRef<Particle[]>([])
   const rotationAngle = useRef(0)
+  const [isChatPanelOpen, setIsChatPanelOpen] = useState(false)
 
   useEffect(() => {
     if (!canvasRef.current || !planetRef.current) return
@@ -173,6 +175,10 @@ export default function ChatPage() {
     }
   }, [])
 
+  const toggleChatPanel = () => {
+    setIsChatPanelOpen(prev => !prev)
+  }
+
   return (
     <div className="min-h-screen bg-black overflow-hidden">
       {/* Star Field Base Layer */}
@@ -218,12 +224,21 @@ export default function ChatPage() {
         <div className="p-8">
           <h2 className="text-2xl font-semibold text-white mb-8">Navigation</h2>
           <nav className="space-y-2">
-            <button className="w-full text-left px-6 py-3 rounded-lg bg-[#6C3CE9]/20 text-white hover:bg-[#6C3CE9]/30 transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)]">
+            <button 
+              className={`w-full text-left px-6 py-3 rounded-lg text-white transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)] ${isChatPanelOpen ? 'bg-[#6C3CE9] hover:bg-[#6C3CE9]/90' : 'bg-[#6C3CE9]/20 hover:bg-[#6C3CE9]/30'}`}
+              onClick={toggleChatPanel}
+            >
               Chatbot
             </button>
           </nav>
         </div>
       </div>
+
+      {/* Chat Panel */}
+      <ChatPanel 
+        isOpen={isChatPanelOpen} 
+        onClose={() => setIsChatPanelOpen(false)} 
+      />
     </div>
   )
 } 
