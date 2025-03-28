@@ -20,7 +20,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! How can I help you with your trading strategy today?',
+      content: 'Hello! I am Stratos AI, your personal sentiment analysis assistant. How can I help you today?',
       timestamp: new Date()
     }
   ])
@@ -102,7 +102,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     expanded: {
       x: '0%',
       opacity: 1,
-      width: 'calc(100vw - 328px)', // 304px (nav width + gap) + 24px right margin
+      width: 'calc(100vw - 385px)', // 304px (nav width + gap) + 24px right margin + 24px gap between panels
       transition: {
         type: 'spring',
         stiffness: 300,

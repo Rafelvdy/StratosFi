@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ChatPanel } from '../components/ChatPanel'
+import { TradingBotPanel } from '../components/TradingBotPanel'
 
 interface Particle {
   x: number
@@ -24,6 +25,7 @@ export default function ChatPage() {
   const particles = useRef<Particle[]>([])
   const rotationAngle = useRef(0)
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false)
+  const [isTradingBotPanelOpen, setIsTradingBotPanelOpen] = useState(false)
 
   useEffect(() => {
     if (!canvasRef.current || !planetRef.current) return
@@ -179,6 +181,10 @@ export default function ChatPage() {
     setIsChatPanelOpen(prev => !prev)
   }
 
+  const toggleTradingBotPanel = () => {
+    setIsTradingBotPanelOpen(prev => !prev)
+  }
+
   return (
     <div className="min-h-screen bg-black overflow-hidden">
       {/* Star Field Base Layer */}
@@ -230,6 +236,12 @@ export default function ChatPage() {
             >
               Chatbot
             </button>
+            <button 
+              className={`w-full text-left px-6 py-3 rounded-lg text-white transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)] ${isTradingBotPanelOpen ? 'bg-[#6C3CE9] hover:bg-[#6C3CE9]/90' : 'bg-[#6C3CE9]/20 hover:bg-[#6C3CE9]/30'}`}
+              onClick={toggleTradingBotPanel}
+            >
+              Trading Bot
+            </button>
           </nav>
         </div>
       </div>
@@ -238,6 +250,12 @@ export default function ChatPage() {
       <ChatPanel 
         isOpen={isChatPanelOpen} 
         onClose={() => setIsChatPanelOpen(false)} 
+      />
+
+      {/* Trading Bot Panel */}
+      <TradingBotPanel 
+        isOpen={isTradingBotPanelOpen} 
+        onClose={() => setIsTradingBotPanelOpen(false)} 
       />
     </div>
   )
