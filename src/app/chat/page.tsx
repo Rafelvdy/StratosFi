@@ -229,33 +229,52 @@ export default function ChatPage() {
       >
         <div className="p-8">
           <h2 className="text-2xl font-semibold text-white mb-8">Navigation</h2>
-          <nav className="flex flex-col h-[calc(100vh-220px)] space-y-4">
-            <button 
-              className={`w-full flex-1 flex flex-col items-center justify-center px-6 py-6 rounded-lg text-white transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)] ${isChatPanelOpen ? 'bg-[#6C3CE9] hover:bg-[#6C3CE9]/90' : 'bg-[#6C3CE9]/20 hover:bg-[#6C3CE9]/30'}`}
-              onClick={toggleChatPanel}
-            >
-              <Image
-                src="/icons/chat bot icon.png"
-                alt="Chatbot"
-                width={256}
-                height={256}
-                className="mb-4"
-              />
-              <span>Chatbot</span>
-            </button>
-            <button 
-              className={`w-full flex-1 flex flex-col items-center justify-center px-6 py-6 rounded-lg text-white transition-all duration-200 hover:shadow-[0_0_10px_0_rgba(46,255,212,0.2)] ${isTradingBotPanelOpen ? 'bg-[#6C3CE9] hover:bg-[#6C3CE9]/90' : 'bg-[#6C3CE9]/20 hover:bg-[#6C3CE9]/30'}`}
-              onClick={toggleTradingBotPanel}
-            >
-              <Image
-                src="/icons/trading bot icon.png"
-                alt="Trading Bot"
-                width={256}
-                height={256}
-                className="mb-4"
-              />
-              <span>Trading Bot</span>
-            </button>
+          <nav className="flex flex-col space-y-6">
+            <div className="relative group">
+              <button 
+                className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 ${
+                  isChatPanelOpen 
+                    ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
+                    : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
+                }`}
+                onClick={toggleChatPanel}
+              >
+                <Image
+                  src="/icons/chat bot icon.png"
+                  alt="Chatbot"
+                  width={96}
+                  height={96}
+                  className="transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute -right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 -translate-x-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-full whitespace-nowrap text-sm font-medium backdrop-blur-sm border border-[#6C3CE9]/30">
+                  Chatbot
+                </div>
+              </button>
+            </div>
+            
+            <div className="relative group">
+              <button 
+                className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 ${
+                  isTradingBotPanelOpen 
+                    ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
+                    : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
+                }`}
+                onClick={toggleTradingBotPanel}
+              >
+                <div className="flex items-center justify-center w-full h-full">
+                  <Image
+                    src="/icons/trading bot icon.png"
+                    alt="Trading Bot"
+                    width={96}
+                    height={96}
+                    className="transition-transform duration-300 group-hover:scale-110 mr-5"
+                  />
+                </div>
+                <div className="absolute -right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 -translate-x-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-full whitespace-nowrap text-sm font-medium backdrop-blur-sm border border-[#6C3CE9]/30">
+                  Trading Bot
+                </div>
+              </button>
+            </div>
           </nav>
         </div>
       </div>
