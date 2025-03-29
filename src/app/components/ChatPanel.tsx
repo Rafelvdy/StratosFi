@@ -13,6 +13,7 @@ interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  intent?: string
 }
 
 export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
@@ -26,6 +27,8 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   ])
   const [input, setInput] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -56,9 +59,9 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onClose])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || isLoading) return
 
     // Add user message
     const userMessage: ChatMessage = {
@@ -69,17 +72,39 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     }
     setMessages(prev => [...prev, userMessage])
     setInput('')
+    setError(null)
+    setIsLoading(true)
 
-    // Simulate assistant response (in a real app, this would call an API)
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: input }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from server')
+      }
+
+      const data = await response.json()
+      
+      // Add assistant message
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'I received your message. This is a placeholder response.',
+        content: data.message,
+        intent: data.intent,
         timestamp: new Date()
       }
       setMessages(prev => [...prev, assistantMessage])
-    }, 1000)
+    } catch (err) {
+      setError('Failed to get response. Please try again.')
+      console.error('Error:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const toggleExpand = () => {
@@ -199,7 +224,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
             </div>
 
             {/* Messages Container */}
-            <div className="h-[calc(100%-140px)] overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map(message => (
                 <div 
                   key={message.id} 
@@ -213,17 +238,38 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                     }`}
                   >
                     <p>{message.content}</p>
+                    {message.intent && (
+                      <p className="text-xs opacity-70 mt-1">Intent: {message.intent}</p>
+                    )}
                     <p className="text-xs opacity-70 mt-1 text-right">
                       {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white rounded-2xl p-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-100" />
+                      <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-200" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {error && (
+                <div className="flex justify-center">
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-500 rounded-2xl p-4">
+                    {error}
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
-            <div className="absolute bottom-0 left-0 right-0 p-5 border-t border-[#6C3CE9]/30 bg-[#1F2937]/80 backdrop-blur-md rounded-b-xl">
+            <div className="p-4 border-t border-[#6C3CE9]/30">
               <form onSubmit={handleSubmit} className="flex space-x-3">
                 <input
                   ref={inputRef}
@@ -232,10 +278,12 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type your message..."
                   className="flex-1 bg-[#374151] text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#2EFFD4]/50"
+                  disabled={isLoading}
                 />
                 <button 
                   type="submit"
-                  className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150"
+                  className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading || !input.trim()}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
