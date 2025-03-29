@@ -43,3 +43,29 @@ html {
     transparent 100%
   );
 }
+
+/* Custom Scrollbar Styles */
+.messages-container {
+  scrollbar-width: thin;
+  scrollbar-color: #2EFFD4 rgba(31, 41, 55, 0.5);
+}
+
+.messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: #2EFFD4;
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: #20CCAA;
+  opacity: 0.8;
+}
