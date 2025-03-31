@@ -13,6 +13,8 @@ interface TwitterApiResponse {
             followers_count: number;
         };
     }>;
+    has_next_page: boolean;
+    next_cursor: string;
 }
 
 export class TwitterApi {
@@ -24,35 +26,74 @@ export class TwitterApi {
             throw new Error('Twitter API key not configured');
         }
 
-        const query = this.constructQuery(params);
-        const url = `${this.BASE_URL}?${new URLSearchParams({ query })}`;
+        let allTweets: Tweet[] = [];
+        let cursor: string | undefined;
+        let hasNextPage = true;
 
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    'X-API-Key': this.API_KEY
-                }
+        while (hasNextPage) {
+            const query = this.constructQuery(params);
+            const queryParams = new URLSearchParams({
+                query,
+                queryType: 'Latest'
             });
-
-            if (!response.ok) {
-                throw new Error(`Twitter API error: ${response.statusText}`);
+            
+            if (cursor) {
+                queryParams.append('cursor', cursor);
             }
 
-            const data: TwitterApiResponse = await response.json();
-            return this.transformResponse(data);
-        } catch (error) {
-            console.error('Error fetching tweets:', error);
-            throw error;
+            const url = `${this.BASE_URL}?${queryParams}`;
+
+            // DEBUG START
+            console.log('DEBUG: Query URL:', url);
+            console.log('DEBUG: Headers:', { 'X-API-Key': '***' });
+            // DEBUG END
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-API-Key': this.API_KEY
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Twitter API error: ${response.statusText}`);
+                }
+
+                const data: TwitterApiResponse = await response.json();
+                // DEBUG START
+                console.log('DEBUG: Raw API Response:', JSON.stringify(data, null, 2));
+                // DEBUG END
+
+                const transformedTweets = this.transformResponse(data);
+                allTweets = [...allTweets, ...transformedTweets];
+
+                hasNextPage = data.has_next_page;
+                cursor = data.next_cursor;
+
+                // Limit to 100 tweets maximum to avoid excessive API calls
+                if (allTweets.length >= 100) {
+                    break;
+                }
+            } catch (error) {
+                console.error('Error fetching tweets:', error);
+                throw error;
+            }
         }
+
+        return allTweets;
     }
 
     private static constructQuery(params: SearchParams): string {
         const { ticker, timeframe } = params;
         
         // Convert timeframe to Twitter API format
-        const timeRange = this.convertTimeframe(timeframe);
+        const timestamp = this.convertTimeframe(timeframe);
         
-        return `(${ticker} OR $${ticker}) lang:en min_faves:10 -is:retweet ${timeRange}`;
+        const query = `${ticker} since:${timestamp}`;
+        // DEBUG START
+        console.log('DEBUG: Constructed Query:', query);
+        // DEBUG END
+        return query;
     }
 
     private static convertTimeframe(timeframe: string): string {
@@ -76,10 +117,20 @@ export class TwitterApi {
                 startTime.setHours(now.getHours() - 24); // Default to 24h
         }
 
-        return `since:${startTime.toISOString().replace(/[:.]/g, '_')}_UTC`;
+        const timestamp = startTime.toISOString().replace(/[:.]/g, '_').slice(0, -5) + '_UTC';
+        // DEBUG START
+        console.log('DEBUG: Converted Timestamp:', timestamp);
+        // DEBUG END
+        return timestamp;
     }
 
     private static transformResponse(data: TwitterApiResponse): Tweet[] {
+        // DEBUG START
+        console.log('DEBUG: Transforming tweets:', data.tweets.length, 'tweets found');
+        if (data.tweets.length > 0) {
+            console.log('DEBUG: First tweet structure:', JSON.stringify(data.tweets[0], null, 2));
+        }
+        // DEBUG END
         return data.tweets.map(tweet => ({
             id: tweet.id,
             text: tweet.text,
@@ -90,8 +141,8 @@ export class TwitterApi {
                 replies: tweet.reply_count || 0
             },
             author: {
-                username: tweet.user.screen_name,
-                followers_count: tweet.user.followers_count
+                username: tweet.user?.screen_name || 'unknown',
+                followers_count: tweet.user?.followers_count || 0
             }
         }));
     }

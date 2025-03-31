@@ -84,6 +84,9 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
       })
 
       const data = await response.json()
+      // DEBUG START
+      console.log('DEBUG: Chat API Response:', JSON.stringify(data, null, 2));
+      // DEBUG END
       
       if (data.success) {
         const assistantMessage: ChatMessage = {

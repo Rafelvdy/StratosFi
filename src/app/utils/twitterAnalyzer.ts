@@ -1,3 +1,5 @@
+import { TwitterApi } from './twitterApi';
+
 // Types
 export interface SearchParams {
     ticker: string;
@@ -8,6 +10,7 @@ export interface AnalysisResponse {
     success: boolean;
     message: string;
     params?: SearchParams;
+    tweets?: Tweet[];
 }
 
 export interface Tweet {
@@ -93,13 +96,16 @@ export function extractSearchParams(userMessage: string): SearchParams {
 export async function analyzeCryptoSentiment(userMessage: string): Promise<AnalysisResponse> {
     try {
         const params = extractSearchParams(userMessage);
+        const tweets = await TwitterApi.fetchTweets(params);
+        
         return {
             success: true,
-            message: `Test: Successfully extracted parameters - Ticker: ${params.ticker}, Timeframe: ${params.timeframe}`,
-            params
+            message: `Found ${tweets.length} relevant tweets for ${params.ticker} in the last ${params.timeframe}`,
+            params,
+            tweets
         };
     } catch (error) {
-        console.error('Error in parameter extraction:', error);
+        console.error('Error in sentiment analysis:', error);
         return {
             success: false,
             message: error instanceof Error ? error.message : 'Unknown error occurred'
