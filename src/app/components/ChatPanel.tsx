@@ -13,7 +13,6 @@ interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
-  intent?: string
 }
 
 export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
@@ -84,23 +83,27 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
         body: JSON.stringify({ prompt: input }),
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to get response from server')
-      }
-
       const data = await response.json()
       
-      // Add assistant message
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.message,
-        intent: data.intent,
-        timestamp: new Date()
+      if (data.success) {
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.message,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, assistantMessage])
+      } else {
+        setError(data.message)
+        // Only remove user message if it's not a timeframe-related error
+        if (!data.message.includes('timeframe') && !data.message.includes('whole numbers')) {
+          setMessages(prev => prev.slice(0, -1))
+        }
       }
-      setMessages(prev => [...prev, assistantMessage])
     } catch (err) {
       setError('Failed to get response. Please try again.')
+      // Always remove user message for network/system errors
+      setMessages(prev => prev.slice(0, -1))
       console.error('Error:', err)
     } finally {
       setIsLoading(false)
@@ -238,9 +241,6 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                     }`}
                   >
                     <p>{message.content}</p>
-                    {message.intent && (
-                      <p className="text-xs opacity-70 mt-1">Intent: {message.intent}</p>
-                    )}
                     <p className="text-xs opacity-70 mt-1 text-right">
                       {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
