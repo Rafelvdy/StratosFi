@@ -1,102 +1,113 @@
-# StratosFi
+# StratosFi - Crypto Sentiment Analysis Platform
 
-A modern Web3 platform for crypto news sentiment analysis and automated trading, featuring a beautiful cosmic-themed interface and powerful AI-driven insights.
+## Overview
+StratosFi is a modern Web3 platform that provides real-time cryptocurrency sentiment analysis through Twitter data integration. The platform helps users make informed trading decisions by analyzing social media sentiment and market trends.
 
 ## Features
-- Real-time crypto news sentiment analysis
-- Automated bot trading capabilities with custom strategies
-- Interactive market insights powered by AI
-- Modern, responsive UI with dynamic space-themed animations
-- Solana blockchain integration
-- Real-time data processing and analytics
-- Smooth page transitions and interactive elements
+- **Real-time Sentiment Analysis**: Analyze Twitter discussions about cryptocurrencies
+- **Flexible Time Ranges**: Query sentiment data from 1 hour up to 4 weeks
+- **Support for Major Cryptocurrencies**: Including BTC, ETH, SOL, ADA, DOT, AVAX, and more
+- **Interactive Chat Interface**: Natural language processing for easy data queries
+- **Comprehensive Tweet Metrics**: Track likes, retweets, replies, and user engagement
+- **Web3 Integration**: Built-in Solana wallet connection support
+- **Modern UI**: Space-themed design with dynamic animations
+- **Responsive Design**: Fully responsive across all devices
 
 ## Tech Stack
-- Next.js 14 with App Router
-- TypeScript for type safety
-- Tailwind CSS for styling
-- React 19
-- Solana Web3.js
-- Framer Motion for animations
-- Wallet Adapter for Solana integration
-
-## Key Technologies
-- Canvas-based particle animations
-- Dynamic imports for optimal performance
-- Web3 wallet integration
-- Real-time data processing
-- Responsive design
-- Modern UI/UX practices
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+ 
-- pnpm (recommended package manager)
-
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/Rafelvdy/StratosFi.git
-
-# Install dependencies
-pnpm install
-
-# Start development server
-pnpm dev
-```
-
-### Development
-The development server will run on http://localhost:3000
+- **Frontend**: Next.js 13+, TypeScript, Tailwind CSS
+- **API Integration**: Twitter API via twitterapi.io
+- **Authentication**: Environment-based API key management
+- **State Management**: React hooks and context
+- **UI Components**: Custom-built components with Tailwind
+- **Web3**: Solana Web3.js and Wallet Adapter
+- **Animations**: Framer Motion
 
 ## Project Structure
 ```
 stratosfi/
-├── public/
-│   └── logos/          # Brand assets and images
 ├── src/
 │   ├── app/            # Next.js app router pages
 │   │   ├── components/ # Page-specific components
 │   │   ├── chat/      # Chat interface
-│   │   └── layout.tsx # Root layout
-│   ├── components/     # Reusable UI components
-│   ├── lib/           # Utilities and helpers
-│   └── types/         # TypeScript type definitions
+│   │   ├── utils/     # Utility functions
+│   │   └── providers/ # Context providers
+│   └── components/    # Shared UI components
 ```
+
+## Getting Started
+
+### Prerequisites
+- Node.js 16+
+- pnpm (recommended package manager)
+- Twitter API key from twitterapi.io
+
+### Environment Setup
+Create a `.env.local` file in the root directory:
+```env
+TWITTER_API_KEY=your_api_key_here
+```
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/stratosfi.git
+
+# Install dependencies
+pnpm install
+
+# Run development server
+pnpm dev
+```
+
+## Usage
+1. Launch the application
+2. Use the chat interface to query cryptocurrency sentiment
+3. Format your queries like: "What is BTC like in the last hour?"
+4. View real-time sentiment analysis results
+
+## Query Examples
+- "How is ETH doing in the last 24 hours?"
+- "Show me BTC sentiment for the past week"
+- "What's the sentiment for SOL in the last hour?"
+
+## Time Range Support
+- Hours: 1h minimum
+- Days: 1-30 days
+- Weeks: Up to 4 weeks
 
 ## Features in Detail
 
 ### Sentiment Analysis
-- Real-time processing of market news
+- Real-time processing of Twitter data
 - Social media sentiment tracking
-- AI-powered trend analysis
-- Customizable analysis parameters
+- Customizable time ranges
+- Support for major cryptocurrencies
 
-### Trading Automation
-- Configurable trading bots
-- Custom strategy implementation
-- Risk management tools
-- Performance tracking
+### Web3 Integration
+- Solana wallet connection
+- Support for Phantom and Solflare wallets
+- Devnet integration
+- Wallet state management
 
 ### User Interface
 - Dynamic space-themed background
-- Smooth page transitions
+- Smooth animations with Framer Motion
 - Responsive design
-- Interactive elements
-- Modern gradient color scheme
-
-## Contributing
-1. Create a feature branch (`git checkout -b feature/amazing-feature`)
-2. Commit changes (`git commit -m 'Add amazing feature'`)
-3. Push to branch (`git push origin feature/amazing-feature`)
-4. Open a Pull Request
+- Interactive chat panel
+- Trading bot panel
+- Wallet connection panel
 
 ## Development Guidelines
 - Follow TypeScript best practices
 - Maintain component modularity
-- Ensure proper cleanup of resources
-- Optimize performance where possible
+- Ensure proper error handling
 - Write clean, maintainable code
+- Use Tailwind CSS for styling
 
-## License
-Private repository. All rights reserved.
+## Legal Notice
+© 2024 StratosFi. All rights reserved. This is a private repository and proprietary software. No part of this codebase may be reproduced, distributed, or transmitted in any form or by any means without the prior written permission of the copyright holder.
+
+## Acknowledgments
+- Built with twitterapi.io
+- Powered by Next.js and TypeScript
+- Solana blockchain integration
