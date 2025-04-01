@@ -31,16 +31,29 @@ export class TwitterApi {
     private static readonly API_KEY = process.env.TWITTER_API_KEY;
     private static readonly BASE_URL = 'https://api.twitterapi.io/twitter/tweet/advanced_search';
     private static readonly EXCLUDED_PHRASES = [
-        'giveaway',
-        'drop your',
-        'you can do this too',
-        'entry',
-        'memecoin',
-        'contest',
-        'retweet to win',
-        'promotion',
-        'vip access'
+        "giveaway",
+        "contest",
+        "airdrop",
+        "pump",
+        "dm me",
+        "dm for",
+        "lets collaborate",
+        "win",
+        "claim",
+        "free",
+        "bot",
+        "spam"
     ];
+
+    private static readonly TICKER_MAPPING: { [key: string]: string } = {
+        'bitcoin': 'BTC',
+        'ethereum': 'ETH',
+        'solana': 'SOL',
+        'cardano': 'ADA',
+        'polkadot': 'DOT',
+        'avalanche': 'AVAX',
+        'cosmos': 'ATOM'
+    };
 
     private static readonly KOL_THRESHOLDS = {
         MIN_FOLLOWERS: 10000,
@@ -72,8 +85,10 @@ export class TwitterApi {
             const url = `${this.BASE_URL}?${queryParams}`;
 
             // DEBUG START
+            console.log('\n=== API Request ===');
             console.log('DEBUG: Query URL:', url);
             console.log('DEBUG: Headers:', { 'X-API-Key': '***' });
+            console.log('==================\n');
             // DEBUG END
 
             try {
@@ -84,12 +99,23 @@ export class TwitterApi {
                 });
 
                 if (!response.ok) {
+                    console.error('API Error:', response.status, response.statusText);
+                    const errorBody = await response.text();
+                    console.error('Error body:', errorBody);
                     throw new Error(`Twitter API error: ${response.statusText}`);
                 }
 
                 const data: TwitterApiResponse = await response.json();
+                
                 // DEBUG START
-                console.log('DEBUG: Raw API Response:', JSON.stringify(data, null, 2));
+                console.log('\n=== API Response ===');
+                console.log('DEBUG: Raw tweet count:', data.tweets?.length || 0);
+                if (data.tweets?.length > 0) {
+                    console.log('DEBUG: First raw tweet:', JSON.stringify(data.tweets[0], null, 2));
+                } else {
+                    console.log('DEBUG: No tweets found in API response');
+                }
+                console.log('===================\n');
                 // DEBUG END
 
                 const transformedTweets = this.transformResponse(data);
@@ -118,6 +144,11 @@ export class TwitterApi {
         };
 
         const now = new Date();
+
+        // DEBUG START
+        console.log('\n=== Starting Tweet Categorization ===');
+        console.log(`Total tweets to process: ${tweets.length}`);
+        // DEBUG END
 
         tweets.forEach(tweet => {
             const {
@@ -151,34 +182,118 @@ export class TwitterApi {
                     time_factor: 1 / hoursElapsed
                 };
                 categories.kol_tweets.push(kolTweet);
+
+                // DEBUG START
+                console.log('\n🌟 KOL Tweet Found:');
+                console.log(`Author: @${tweet.author.username} (${tweet.author.followers_count} followers)`);
+                console.log(`Text: ${tweet.text}`);
+                console.log(`Metrics: ${likes} likes, ${retweets} retweets`);
+                console.log(`Influence Score: ${kolTweet.influence_score.toFixed(2)}`);
+                console.log(`Time Factor: ${kolTweet.time_factor.toFixed(2)}`);
+                // DEBUG END
             } else {
                 categories.community_tweets.push(tweet);
+
+                // DEBUG START
+                console.log('\n👥 Community Tweet:');
+                console.log(`Author: @${tweet.author.username} (${tweet.author.followers_count} followers)`);
+                console.log(`Text: ${tweet.text}`);
+                console.log(`Metrics: ${likes} likes, ${retweets} retweets`);
+                // DEBUG END
             }
         });
 
         // Sort KOL tweets by influence score
         categories.kol_tweets.sort((a, b) => b.influence_score - a.influence_score);
 
+        // DEBUG START
+        console.log('\n=== Categorization Summary ===');
+        console.log(`KOL Tweets: ${categories.kol_tweets.length}`);
+        console.log(`Community Tweets: ${categories.community_tweets.length}`);
+        console.log('===============================\n');
+        // DEBUG END
+
         return categories;
+    }
+
+    private static transformResponse(data: TwitterApiResponse): Tweet[] {
+        // DEBUG START
+        console.log('\n=== Transform Response ===');
+        console.log('DEBUG: Raw tweet count:', data.tweets?.length || 0);
+        console.log('DEBUG: First raw tweet:', data.tweets?.[0]);
+        // DEBUG END
+        
+        if (!data.tweets?.length) {
+            console.log('DEBUG: No tweets found in API response');
+            return [];
+        }
+
+        const transformed = data.tweets.map(tweet => ({
+            id: tweet.id,
+            text: tweet.text,
+            created_at: tweet.created_at,
+            metrics: {
+                likes: tweet.favorite_count || 0,
+                retweets: tweet.retweet_count || 0,
+                replies: tweet.reply_count || 0
+            },
+            author: {
+                username: tweet.user?.screen_name || 'unknown',
+                followers_count: tweet.user?.followers_count || 0
+            }
+        }));
+
+        // DEBUG START
+        console.log('DEBUG: Transformed tweet count:', transformed.length);
+        if (transformed.length > 0) {
+            console.log('DEBUG: First transformed tweet:', JSON.stringify(transformed[0], null, 2));
+        }
+        console.log('=======================\n');
+        // DEBUG END
+
+        return transformed;
     }
 
     private static constructQuery(params: SearchParams): string {
         const { ticker, timeframe } = params;
-        
-        // Convert timeframe to Twitter API format
+        const searchTerm = this.TICKER_MAPPING[ticker.toLowerCase()] || ticker.toUpperCase();
         const timestamp = this.convertTimeframe(timeframe);
         
         // Create exclusion filters
         const exclusionFilters = this.EXCLUDED_PHRASES
-            .map(phrase => `-text:"${phrase}"`)
+            .map(phrase => `-"${phrase}"`)
             .join(' ');
+            
+        // Create username exclusion filters
+        const usernameExclusions = [
+            `-from:*${searchTerm}*`,
+            `-from:*${ticker.toLowerCase()}*`,
+            `-from:*${ticker.toUpperCase()}*`
+        ].join(' ');
         
-        // Combine ticker search with exclusion filters
-        const query = `text:${ticker} ${exclusionFilters} since:${timestamp}`;
+        // Create search terms with common variations
+        const searchVariations = [
+            searchTerm,
+            ticker.toLowerCase(),
+            `#${searchTerm}`,
+            `$${searchTerm}`,
+            `#${ticker.toLowerCase()}`,
+            `$${ticker.toLowerCase()}`
+        ].join(' OR ');
+        
+        // Add language filter, quality filters, bot filtering, and exclude replies
+        const query = `(${searchVariations}) ${exclusionFilters} ${usernameExclusions} lang:en -has:links min_faves:2 -is:bot -is:nullcast -is:reply since:${timestamp}`;
         
         // DEBUG START
-        console.log('DEBUG: Constructed Query:', query);
+        console.log('\n=== Query Construction ===');
+        console.log('DEBUG: Input ticker:', ticker);
+        console.log('DEBUG: Mapped search term:', searchTerm);
+        console.log('DEBUG: Search variations:', searchVariations);
+        console.log('DEBUG: Username exclusions:', usernameExclusions);
+        console.log('DEBUG: Constructed query:', query);
+        console.log('========================\n');
         // DEBUG END
+
         return query;
     }
 
@@ -208,28 +323,5 @@ export class TwitterApi {
         console.log('DEBUG: Converted Timestamp:', timestamp);
         // DEBUG END
         return timestamp;
-    }
-
-    private static transformResponse(data: TwitterApiResponse): Tweet[] {
-        // DEBUG START
-        console.log('DEBUG: Transforming tweets:', data.tweets.length, 'tweets found');
-        if (data.tweets.length > 0) {
-            console.log('DEBUG: First tweet structure:', JSON.stringify(data.tweets[0], null, 2));
-        }
-        // DEBUG END
-        return data.tweets.map(tweet => ({
-            id: tweet.id,
-            text: tweet.text,
-            created_at: tweet.created_at,
-            metrics: {
-                likes: tweet.favorite_count || 0,
-                retweets: tweet.retweet_count || 0,
-                replies: tweet.reply_count || 0
-            },
-            author: {
-                username: tweet.user?.screen_name || 'unknown',
-                followers_count: tweet.user?.followers_count || 0
-            }
-        }));
     }
 } 

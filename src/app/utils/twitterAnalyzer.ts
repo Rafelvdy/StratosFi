@@ -6,13 +6,6 @@ export interface SearchParams {
     timeframe: string;
 }
 
-export interface AnalysisResponse {
-    success: boolean;
-    message: string;
-    params?: SearchParams;
-    tweets?: Tweet[];
-}
-
 export interface Tweet {
     id: string;
     text: string;
@@ -26,6 +19,23 @@ export interface Tweet {
         username: string;
         followers_count: number;
     };
+}
+
+export interface KOLTweet extends Tweet {
+    influence_score: number;
+    time_factor: number;
+}
+
+export interface TweetCategories {
+    kol_tweets: KOLTweet[];
+    community_tweets: Tweet[];
+}
+
+export interface AnalysisResponse {
+    success: boolean;
+    message: string;
+    params?: SearchParams;
+    tweets?: TweetCategories;
 }
 
 // Core function
@@ -98,9 +108,11 @@ export async function analyzeCryptoSentiment(userMessage: string): Promise<Analy
         const params = extractSearchParams(userMessage);
         const tweets = await TwitterApi.fetchTweets(params);
         
+        const totalTweets = tweets.kol_tweets.length + tweets.community_tweets.length;
+        
         return {
             success: true,
-            message: `Found ${tweets.length} relevant tweets for ${params.ticker} in the last ${params.timeframe}`,
+            message: `Found ${totalTweets} relevant tweets for ${params.ticker} in the last ${params.timeframe} (${tweets.kol_tweets.length} KOL, ${tweets.community_tweets.length} Community)`,
             params,
             tweets
         };
