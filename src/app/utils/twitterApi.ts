@@ -1,5 +1,15 @@
 import { SearchParams, Tweet } from './twitterAnalyzer';
 
+interface KOLTweet extends Tweet {
+    influence_score: number;
+    time_factor: number;
+}
+
+interface TweetCategories {
+    kol_tweets: KOLTweet[];
+    community_tweets: Tweet[];
+}
+
 interface TwitterApiResponse {
     tweets: Array<{
         id: string;
@@ -20,8 +30,26 @@ interface TwitterApiResponse {
 export class TwitterApi {
     private static readonly API_KEY = process.env.TWITTER_API_KEY;
     private static readonly BASE_URL = 'https://api.twitterapi.io/twitter/tweet/advanced_search';
+    private static readonly EXCLUDED_PHRASES = [
+        'giveaway',
+        'drop your',
+        'you can do this too',
+        'entry',
+        'memecoin',
+        'contest',
+        'retweet to win',
+        'promotion',
+        'vip access'
+    ];
 
-    static async fetchTweets(params: SearchParams): Promise<Tweet[]> {
+    private static readonly KOL_THRESHOLDS = {
+        MIN_FOLLOWERS: 10000,
+        MIN_ENGAGEMENT_RATE: 0.01,
+        MIN_RETWEETS: 10,
+        MIN_LIKES: 20
+    };
+
+    static async fetchTweets(params: SearchParams): Promise<TweetCategories> {
         if (!this.API_KEY) {
             throw new Error('Twitter API key not configured');
         }
@@ -80,7 +108,58 @@ export class TwitterApi {
             }
         }
 
-        return allTweets;
+        return this.categorizeTweets(allTweets);
+    }
+
+    private static categorizeTweets(tweets: Tweet[]): TweetCategories {
+        const categories: TweetCategories = {
+            kol_tweets: [],
+            community_tweets: []
+        };
+
+        const now = new Date();
+
+        tweets.forEach(tweet => {
+            const {
+                metrics: { likes, retweets },
+                author: { followers_count },
+                created_at
+            } = tweet;
+
+            // Calculate time-based factors
+            const tweetDate = new Date(created_at);
+            const hoursElapsed = Math.max(1, (now.getTime() - tweetDate.getTime()) / (1000 * 60 * 60));
+            
+            // Calculate time-adjusted engagement
+            const timeAdjustedEngagement = (likes + retweets) / hoursElapsed;
+            const engagementRate = timeAdjustedEngagement / followers_count;
+
+            // Check if tweet meets KOL criteria
+            const isKOL = 
+                followers_count >= this.KOL_THRESHOLDS.MIN_FOLLOWERS &&
+                engagementRate >= this.KOL_THRESHOLDS.MIN_ENGAGEMENT_RATE &&
+                retweets >= this.KOL_THRESHOLDS.MIN_RETWEETS &&
+                likes >= this.KOL_THRESHOLDS.MIN_LIKES;
+
+            if (isKOL) {
+                const followersImpact = (followers_count / this.KOL_THRESHOLDS.MIN_FOLLOWERS) * 0.4;
+                const engagementImpact = (timeAdjustedEngagement / this.KOL_THRESHOLDS.MIN_ENGAGEMENT_RATE) * 0.6;
+                
+                const kolTweet: KOLTweet = {
+                    ...tweet,
+                    influence_score: Math.min(100, (followersImpact + engagementImpact) * 100),
+                    time_factor: 1 / hoursElapsed
+                };
+                categories.kol_tweets.push(kolTweet);
+            } else {
+                categories.community_tweets.push(tweet);
+            }
+        });
+
+        // Sort KOL tweets by influence score
+        categories.kol_tweets.sort((a, b) => b.influence_score - a.influence_score);
+
+        return categories;
     }
 
     private static constructQuery(params: SearchParams): string {
@@ -89,8 +168,14 @@ export class TwitterApi {
         // Convert timeframe to Twitter API format
         const timestamp = this.convertTimeframe(timeframe);
         
-        // Use text: operator to match only in tweet text content
-        const query = `text:${ticker} since:${timestamp}`;
+        // Create exclusion filters
+        const exclusionFilters = this.EXCLUDED_PHRASES
+            .map(phrase => `-text:"${phrase}"`)
+            .join(' ');
+        
+        // Combine ticker search with exclusion filters
+        const query = `text:${ticker} ${exclusionFilters} since:${timestamp}`;
+        
         // DEBUG START
         console.log('DEBUG: Constructed Query:', query);
         // DEBUG END
