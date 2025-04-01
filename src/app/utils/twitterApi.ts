@@ -89,7 +89,8 @@ export class TwitterApi {
         // Convert timeframe to Twitter API format
         const timestamp = this.convertTimeframe(timeframe);
         
-        const query = `${ticker} since:${timestamp}`;
+        // Use text: operator to match only in tweet text content
+        const query = `text:${ticker} since:${timestamp}`;
         // DEBUG START
         console.log('DEBUG: Constructed Query:', query);
         // DEBUG END
