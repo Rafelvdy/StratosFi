@@ -1,24 +1,53 @@
-import { NextResponse } from 'next/server'
 import { analyzeCryptoSentiment } from '@/app/utils/twitterAnalyzer'
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const { prompt } = await req.json()
-    // DEBUG START
-    console.log('DEBUG: Received prompt:', prompt);
-    // DEBUG END
-    
-    const analysis = await analyzeCryptoSentiment(prompt)
-    // DEBUG START
-    console.log('DEBUG: Analysis result:', JSON.stringify(analysis, null, 2));
-    // DEBUG END
-    return NextResponse.json(analysis)
+    // Check environment variables first
+    if (!process.env.DEEPSEEK_API_KEY) {
+      console.error('DEEPSEEK_API_KEY is not configured')
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'API configuration error. Please check server environment setup.'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    }
 
+    const { prompt } = await request.json()
+    
+    if (!prompt) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'No prompt provided'
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    }
+
+    const result = await analyzeCryptoSentiment(prompt)
+    
+    return new Response(JSON.stringify(result), {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
   } catch (error) {
-    console.error('Error in chat route:', error)
-    return NextResponse.json(
-      { success: false, message: 'Failed to process request' },
-      { status: 500 }
-    )
+    console.error('API Error:', error)
+    
+    return new Response(JSON.stringify({
+      success: false,
+      message: error instanceof Error ? error.message : 'An unexpected error occurred'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
   }
 } 

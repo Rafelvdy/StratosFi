@@ -1,9 +1,10 @@
 import { TwitterApi } from './twitterApi';
+import { analyzeTweets } from './nlpAnalyzer';
 
 // Types
 export interface SearchParams {
     ticker: string;
-    timeframe: string;
+    timeframe?: string;
 }
 
 export interface Tweet {
@@ -31,96 +32,91 @@ export interface TweetCategories {
     community_tweets: Tweet[];
 }
 
-export interface AnalysisResponse {
-    success: boolean;
-    message: string;
-    params?: SearchParams;
-    tweets?: TweetCategories;
-}
-
 // Core function
-export function extractSearchParams(userMessage: string): SearchParams {
-    const message = userMessage.toLowerCase();
-    
+export function extractSearchParams(message: string): SearchParams {
     // Extract ticker
-    const tickerMatch = message.match(/\b(bitcoin|btc|eth|ethereum|sol|solana|ada|cardano|dot|polkadot|avax|avalanche|atom|cosmos)\b/);
-    const ticker = tickerMatch ? tickerMatch[1] : '';
+    const ticker = message.match(/\b(BTC|ETH|SOL|DOGE|XRP|ADA)\b/i)?.[0] || '';
     
-    // Extract timeframe with constraints
-    const lastTimeMatch = message.match(/last\s+(hour|day|week|month)/);
-    const numberTimeMatch = message.match(/(\d+\.?\d*)\s*(hour|day|week|month)/);
+    // Update timeframe extraction to handle natural language
     let timeframe = '24h'; // default
-    let invalidTimeframe = false;
-    let timeframeError = '';
-
+    
+    // Handle "last X" format
+    const lastTimeMatch = message.match(/last\s+(hour|day|week|month)/i);
     if (lastTimeMatch) {
-        const [, unit] = lastTimeMatch;
-        if (unit === 'month') {
-            invalidTimeframe = true;
-            timeframeError = 'Invalid timeframe:\nMinimum - 1 Hour\nMaximum - 4 Weeks';
-        } else {
-            timeframe = `1${unit[0]}`;
+        const unit = lastTimeMatch[1].toLowerCase();
+        switch (unit) {
+            case 'hour': timeframe = '1h'; break;
+            case 'day': timeframe = '24h'; break;
+            case 'week': timeframe = '7d'; break;
+            case 'month': timeframe = '30d'; break;
         }
-    } else if (numberTimeMatch) {
+    }
+    
+    // Handle "X hours/days/weeks/months" format
+    const numberTimeMatch = message.match(/(\d+)\s*(hours?|days?|weeks?|months?)/i);
+    if (numberTimeMatch) {
         const [, value, unit] = numberTimeMatch;
-        const numValue = parseFloat(value);
-
-        // Check if the value is a decimal
-        if (!Number.isInteger(numValue)) {
-            invalidTimeframe = true;
-            timeframeError = 'Only whole numbers allowed for timeframe';
-        } else if (unit === 'hour' && numValue >= 1) {
-            timeframe = `${numValue}h`;
-        } else if (unit === 'day') {
-            timeframe = `${numValue}d`;
-        } else if (unit === 'week') {
-            if (numValue <= 4) {
-                timeframe = `${numValue}w`;
-            } else {
-                invalidTimeframe = true;
-                timeframeError = 'Invalid timeframe:\nMinimum - 1 Hour\nMaximum - 4 Weeks';
-            }
-        } else if (unit === 'month') {
-            invalidTimeframe = true;
-            timeframeError = 'Invalid timeframe:\nMinimum - 1 Hour\nMaximum - 4 Weeks';
-        }
-
-        if (unit === 'hour' && numValue < 1) {
-            invalidTimeframe = true;
-            timeframeError = 'Invalid timeframe:\nMinimum - 1 Hour\nMaximum - 4 Weeks';
+        const numValue = parseInt(value);
+        
+        if (unit.startsWith('hour')) {
+            timeframe = numValue === 1 ? '1h' : '24h';
+        } else if (unit.startsWith('day')) {
+            timeframe = numValue === 1 ? '24h' : '7d';
+        } else if (unit.startsWith('week')) {
+            timeframe = numValue === 1 ? '7d' : '30d';
+        } else if (unit.startsWith('month')) {
+            timeframe = '30d';
         }
     }
-    
-    if (!ticker) {
-        throw new Error('Please specify a cryptocurrency (e.g., BTC, ETH, SOL)');
-    }
 
-    if (invalidTimeframe) {
-        throw new Error(timeframeError);
-    }
-    
     return { ticker, timeframe };
 }
 
 // Main analysis function
-export async function analyzeCryptoSentiment(userMessage: string): Promise<AnalysisResponse> {
+export async function analyzeCryptoSentiment(message: string): Promise<{
+    success: boolean;
+    message: string;
+}> {
+    const params = extractSearchParams(message);
+    if (!params.ticker) {
+        return {
+            success: false,
+            message: "I couldn't understand which cryptocurrency you're asking about. Please specify a cryptocurrency name or symbol."
+        };
+    }
+
     try {
-        const params = extractSearchParams(userMessage);
         const tweets = await TwitterApi.fetchTweets(params);
         
-        const totalTweets = tweets.kol_tweets.length + tweets.community_tweets.length;
+        if (tweets.community_tweets.length === 0) {
+            return {
+                success: false,
+                message: `No community tweets found for ${params.ticker} in the specified timeframe.`
+            };
+        }
+
+        const analysis = await analyzeTweets(tweets.community_tweets);
         
+        let response = `Community Mood for ${params.ticker}: ${analysis.averageMood.toFixed(1)}/5\n\n`;
+        
+        if (analysis.events.length > 0) {
+            response += "Significant Events:\n" + analysis.events.join("\n") + "\n\n";
+        }
+        
+        if (analysis.insights.length > 0) {
+            response += "Key Insights:\n" + analysis.insights.join("\n");
+        }
+
         return {
             success: true,
-            message: `Found ${totalTweets} relevant tweets for ${params.ticker} in the last ${params.timeframe} (${tweets.kol_tweets.length} KOL, ${tweets.community_tweets.length} Community)`,
-            params,
-            tweets
+            message: response
         };
+
     } catch (error) {
         console.error('Error in sentiment analysis:', error);
         return {
             success: false,
-            message: error instanceof Error ? error.message : 'Unknown error occurred'
+            message: error instanceof Error ? error.message : 'Failed to analyze sentiment'
         };
     }
 } 

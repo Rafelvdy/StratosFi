@@ -1,5 +1,16 @@
 import { SearchParams, Tweet } from './twitterAnalyzer';
 
+class TwitterApiError extends Error {
+    constructor(
+        public code: string,
+        message: string,
+        public details?: Record<string, unknown>
+    ) {
+        super(message);
+        this.name = 'TwitterApiError';
+    }
+}
+
 interface KOLTweet extends Tweet {
     influence_score: number;
     time_factor: number;
@@ -62,79 +73,128 @@ export class TwitterApi {
         MIN_LIKES: 20
     };
 
-    static async fetchTweets(params: SearchParams): Promise<TweetCategories> {
+    private static readonly MAX_RETRIES = 3;
+    private static readonly RETRY_DELAY = 1000; // 1 second
+
+    private static validateRequest(params: SearchParams): void {
         if (!this.API_KEY) {
-            throw new Error('Twitter API key not configured');
+            throw new TwitterApiError('NO_API_KEY', 'Twitter API key not configured');
         }
 
-        let allTweets: Tweet[] = [];
-        let cursor: string | undefined;
-        let hasNextPage = true;
+        if (!params.ticker) {
+            throw new TwitterApiError('INVALID_PARAMS', 'Ticker symbol is required');
+        }
 
-        while (hasNextPage) {
-            const query = this.constructQuery(params);
-            const queryParams = new URLSearchParams({
-                query,
-                queryType: 'Latest'
-            });
-            
-            if (cursor) {
-                queryParams.append('cursor', cursor);
+        const validTimeframes = ['1h', '24h', '7d', '30d'];
+        if (params.timeframe && !validTimeframes.includes(params.timeframe)) {
+            // Convert to default timeframe instead of throwing error
+            params.timeframe = '24h';
+            console.log('Invalid timeframe provided, defaulting to 24h');
+        }
+    }
+
+    private static validateResponse(response: Response): void {
+        if (!response.ok) {
+            const status = response.status;
+            if (status === 429) {
+                throw new TwitterApiError('RATE_LIMIT', 'Rate limit exceeded');
+            } else if (status === 401) {
+                throw new TwitterApiError('UNAUTHORIZED', 'Invalid API key');
+            } else if (status === 400) {
+                throw new TwitterApiError('BAD_REQUEST', 'Invalid request parameters');
+            } else {
+                throw new TwitterApiError('API_ERROR', `Twitter API error: ${response.statusText}`);
             }
+        }
+    }
 
-            const url = `${this.BASE_URL}?${queryParams}`;
+    private static async delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
-            // DEBUG START
-            console.log('\n=== API Request ===');
-            console.log('DEBUG: Query URL:', url);
-            console.log('DEBUG: Headers:', { 'X-API-Key': '***' });
-            console.log('==================\n');
-            // DEBUG END
-
+    private static async retryWithBackoff<T>(
+        operation: () => Promise<T>,
+        retries: number = this.MAX_RETRIES
+    ): Promise<T> {
+        for (let i = 0; i < retries; i++) {
             try {
-                const response = await fetch(url, {
-                    headers: {
-                        'X-API-Key': this.API_KEY
-                    }
-                });
-
-                if (!response.ok) {
-                    console.error('API Error:', response.status, response.statusText);
-                    const errorBody = await response.text();
-                    console.error('Error body:', errorBody);
-                    throw new Error(`Twitter API error: ${response.statusText}`);
-                }
-
-                const data: TwitterApiResponse = await response.json();
+                return await operation();
+            } catch (error) {
+                if (i === retries - 1) throw error;
                 
-                // DEBUG START
-                console.log('\n=== API Response ===');
-                console.log('DEBUG: Raw tweet count:', data.tweets?.length || 0);
-                if (data.tweets?.length > 0) {
-                    console.log('DEBUG: First raw tweet:', JSON.stringify(data.tweets[0], null, 2));
-                } else {
-                    console.log('DEBUG: No tweets found in API response');
-                }
-                console.log('===================\n');
-                // DEBUG END
+                const isRetryable = error instanceof TwitterApiError && 
+                    ['RATE_LIMIT', 'API_ERROR'].includes(error.code);
+                
+                if (!isRetryable) throw error;
 
+                const delayMs = this.RETRY_DELAY * Math.pow(2, i);
+                console.log(`Retry attempt ${i + 1}/${retries} after ${delayMs}ms`);
+                await this.delay(delayMs);
+            }
+        }
+        throw new TwitterApiError('MAX_RETRIES', 'Maximum retry attempts exceeded');
+    }
+
+    static async fetchTweets(params: SearchParams): Promise<TweetCategories> {
+        try {
+            this.validateRequest(params);
+
+            let allTweets: Tweet[] = [];
+            let cursor: string | undefined;
+            let hasNextPage = true;
+
+            while (hasNextPage) {
+                const query = this.constructQuery(params);
+                const url = `${this.BASE_URL}?queryType=Latest&query=${encodeURIComponent(query)}`;
+                const finalUrl = cursor ? `${url}&cursor=${cursor}` : url;
+
+                console.log('\n=== API Request ===');
+                console.log('DEBUG: Query URL:', finalUrl);
+                console.log('DEBUG: Headers:', { 'X-API-Key': '***' });
+
+                const fetchOperation = async () => {
+                    const response = await fetch(finalUrl, {
+                        headers: {
+                            'X-API-Key': this.API_KEY!
+                        }
+                    });
+
+                    this.validateResponse(response);
+                    const data: TwitterApiResponse = await response.json();
+                    
+                    if (!data || !Array.isArray(data.tweets)) {
+                        throw new TwitterApiError('INVALID_RESPONSE', 'Invalid response format from Twitter API');
+                    }
+
+                    console.log('\n=== API Response ===');
+                    console.log('DEBUG: Raw tweet count:', data.tweets.length);
+                    if (data.tweets.length > 0) {
+                        console.log('DEBUG: First raw tweet:', JSON.stringify(data.tweets[0], null, 2));
+                    }
+
+                    return data;
+                };
+
+                const data = await this.retryWithBackoff(fetchOperation);
                 const transformedTweets = this.transformResponse(data);
                 allTweets = [...allTweets, ...transformedTweets];
 
                 hasNextPage = data.has_next_page;
                 cursor = data.next_cursor;
 
-                // Limit to 100 tweets maximum to avoid excessive API calls
-                if (allTweets.length >= 100) {
-                    break;
-                }
-            } catch (error) {
-                console.error('Error fetching tweets:', error);
+                if (allTweets.length >= 100) break;
+            }
+
+            return this.categorizeTweets(allTweets);
+
+        } catch (error) {
+            if (error instanceof TwitterApiError) {
+                console.error(`Twitter API Error: [${error.code}] ${error.message}`, error.details);
                 throw error;
             }
+            console.error('Unexpected error:', error);
+            throw new TwitterApiError('UNKNOWN_ERROR', 'An unexpected error occurred', { originalError: error });
         }
-
-        return this.categorizeTweets(allTweets);
     }
 
     private static categorizeTweets(tweets: Tweet[]): TweetCategories {
@@ -297,7 +357,7 @@ export class TwitterApi {
         return query;
     }
 
-    private static convertTimeframe(timeframe: string): string {
+    private static convertTimeframe(timeframe: string = '24h'): string {
         const now = new Date();
         const startTime = new Date();
 
@@ -318,10 +378,6 @@ export class TwitterApi {
                 startTime.setHours(now.getHours() - 24); // Default to 24h
         }
 
-        const timestamp = startTime.toISOString().replace(/[:.]/g, '_').slice(0, -5) + '_UTC';
-        // DEBUG START
-        console.log('DEBUG: Converted Timestamp:', timestamp);
-        // DEBUG END
-        return timestamp;
+        return startTime.toISOString().split('.')[0] + 'Z';
     }
 } 

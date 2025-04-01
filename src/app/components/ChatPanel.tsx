@@ -62,7 +62,6 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
 
-    // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -83,11 +82,16 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
         body: JSON.stringify({ prompt: input }),
       })
 
+      // Handle non-JSON responses
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response:', await response.text())
+        throw new Error('Server returned non-JSON response')
+      }
+
       const data = await response.json()
-      // DEBUG START
-      console.log('DEBUG: Chat API Response:', JSON.stringify(data, null, 2));
-      // DEBUG END
-      
+      console.log('DEBUG: Chat API Response:', data)
+
       if (data.success) {
         const assistantMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -97,17 +101,19 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
         }
         setMessages(prev => [...prev, assistantMessage])
       } else {
-        setError(data.message)
-        // Only remove user message if it's not a timeframe-related error
-        if (!data.message.includes('timeframe') && !data.message.includes('whole numbers')) {
+        let errorMessage = data.message
+        if (response.status === 500) {
+          errorMessage = "An internal server error occurred. Please try again."
+        }
+        setError(errorMessage)
+        if (!errorMessage.includes('timeframe')) {
           setMessages(prev => prev.slice(0, -1))
         }
       }
     } catch (err) {
-      setError('Failed to get response. Please try again.')
-      // Always remove user message for network/system errors
-      setMessages(prev => prev.slice(0, -1))
       console.error('Error:', err)
+      setError('Failed to get response. Please try again.')
+      setMessages(prev => prev.slice(0, -1))
     } finally {
       setIsLoading(false)
     }
