@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
@@ -16,6 +17,10 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  colorValue?: {
+    value: string
+    color: string
+  }
 }
 
 const debugStorage = (action: string, walletAddress: string) => {
@@ -184,6 +189,9 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
       content: input,
       timestamp: new Date()
     }
+    
+    // Clear input immediately after creating message
+    setInput('')
     setMessages(prev => [...prev, userMessage])
     setIsLoading(true)
 
@@ -204,25 +212,34 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
       const data = await response.json()
       console.log('DEBUG: Chat API Response:', data)
 
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.success ? data.message : (
-          data.message || "An internal server error occurred. Please try again."
-        ),
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, assistantMessage])
-      
-      if (data.success) {
-        setInput('') // Only clear input on success
+      if (data.success && Array.isArray(data.messages)) {
+        // Add each message separately
+        for (const msg of data.messages) {
+          const assistantMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: msg.content,
+            timestamp: new Date(),
+            colorValue: msg.colorValue
+          }
+          setMessages(prev => [...prev, assistantMessage])
+        }
+      } else {
+        // Handle error case
+        const errorMessage: ChatMessage = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: "I couldn't process that request. Please try asking about cryptocurrency sentiment (e.g., BTC, ETH, SOL).",
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, errorMessage])
       }
     } catch (err) {
       console.error('Error:', err)
       const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         role: 'assistant',
-        content: 'Failed to get response. Please try again.',
+        content: "I'm having trouble processing requests right now. Please try again in a moment.",
         timestamp: new Date()
       }
       setMessages(prev => [...prev, assistantMessage])
@@ -361,7 +378,22 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                         : 'bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white'
                     }`}
                   >
-                    <p>{message.content}</p>
+                    {message.colorValue && message.colorValue.value ? (
+                      <p>
+                        {message.content.split(message.colorValue.value).map((part, i, arr) => (
+                          <React.Fragment key={i}>
+                            {part}
+                            {i < arr.length - 1 && (
+                              <span style={{ color: message.colorValue?.color }}>
+                                {message.colorValue?.value}
+                              </span>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </p>
+                    ) : (
+                      <p>{message.content}</p>
+                    )}
                     <p className="text-xs opacity-70 mt-1 text-right">
                       {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>

@@ -7,6 +7,15 @@ export interface SearchParams {
     timeframe?: string;
 }
 
+export interface AnalysisMessage {
+    type: 'mood' | 'insights' | 'events';
+    content: string;
+    colorValue?: {
+        value: string;
+        color: string;
+    };
+}
+
 export interface Tweet {
     id: string;
     text: string;
@@ -74,21 +83,24 @@ export function extractSearchParams(message: string): SearchParams {
 
 // Function to get mood color
 function getMoodColor(mood: number): string {
-    if (mood < 2.5) return '<span style="color: #ff4444">'; // Red for bearish/negative
-    if (mood <= 3.5) return '<span style="color: #ffa500">'; // Orange for neutral
-    return '<span style="color: #00c853">'; // Green for bullish/positive
+    if (mood < 2.5) return '#ff4444'; // Red for bearish/negative
+    if (mood <= 3.5) return '#ffa500'; // Orange for neutral
+    return '#00c853'; // Green for bullish/positive
 }
 
 // Main analysis function
 export async function analyzeCryptoSentiment(message: string): Promise<{
     success: boolean;
-    message: string;
+    messages: AnalysisMessage[];
 }> {
     const params = extractSearchParams(message);
     if (!params.ticker) {
         return {
             success: false,
-            message: "I couldn't understand which cryptocurrency you're asking about. Please specify a cryptocurrency name or symbol."
+            messages: [{
+                type: 'mood',
+                content: "I couldn't understand which cryptocurrency you're asking about. Please specify a cryptocurrency name or symbol."
+            }]
         };
     }
 
@@ -98,33 +110,67 @@ export async function analyzeCryptoSentiment(message: string): Promise<{
         if (tweets.community_tweets.length === 0) {
             return {
                 success: false,
-                message: `No community tweets found for ${params.ticker} in the specified timeframe.`
+                messages: [{
+                    type: 'mood',
+                    content: `No community tweets found for ${params.ticker} in the specified timeframe.`
+                }]
             };
         }
 
         const analysis = await analyzeTweets(tweets.community_tweets);
-        const moodColor = getMoodColor(analysis.averageMood);
+        const messages: AnalysisMessage[] = [];
         
-        let response = `Community Mood for ${params.ticker}: ${moodColor}${analysis.averageMood.toFixed(1)}</span>/5\n\n`;
-        
-        if (analysis.events.length > 0) {
-            response += "Significant Events:\n" + analysis.events.join("\n") + "\n\n";
+        // Add mood message
+        messages.push({
+            type: 'mood',
+            content: `Community Mood for ${params.ticker}: ${analysis.averageMood.toFixed(1)}/5`,
+            colorValue: {
+                value: analysis.averageMood.toFixed(1),
+                color: getMoodColor(analysis.averageMood)
+            }
+        });
+
+        // Add insights if available
+        if (analysis.insights && analysis.insights.length > 0) {
+            const relevantInsights = analysis.insights
+                .filter(insight => insight && !insight.includes('[None]') && !insight.includes('[Omitted]'))
+                .map(insight => `• ${insight.trim()}`);
+
+            if (relevantInsights.length > 0) {
+                messages.push({
+                    type: 'insights',
+                    content: `Key Insights:\n${relevantInsights.join('\n')}`
+                });
+            }
         }
-        
-        if (analysis.insights.length > 0) {
-            response += "Key Insights:\n" + analysis.insights.join("\n");
+
+        // Add events if available
+        if (analysis.events && analysis.events.length > 0) {
+            const relevantEvents = analysis.events
+                .filter(event => event && !event.includes('[None]') && !event.includes('[Omitted]'))
+                .map(event => `• ${event.trim()}`);
+
+            if (relevantEvents.length > 0) {
+                messages.push({
+                    type: 'events',
+                    content: `Significant Events:\n${relevantEvents.join('\n')}`
+                });
+            }
         }
 
         return {
             success: true,
-            message: response
+            messages
         };
 
     } catch (error) {
         console.error('Error in sentiment analysis:', error);
         return {
             success: false,
-            message: error instanceof Error ? error.message : 'Failed to analyze sentiment'
+            messages: [{
+                type: 'mood',
+                content: error instanceof Error ? error.message : 'Failed to analyze sentiment'
+            }]
         };
     }
 } 

@@ -7,7 +7,10 @@ export async function POST(request: Request) {
       console.error('DEEPSEEK_API_KEY is not configured')
       return new Response(JSON.stringify({
         success: false,
-        message: 'API configuration error. Please check server environment setup.'
+        messages: [{
+          type: 'mood',
+          content: 'API configuration error. Please check server environment setup.'
+        }]
       }), {
         status: 500,
         headers: {
@@ -21,7 +24,10 @@ export async function POST(request: Request) {
     if (!prompt) {
       return new Response(JSON.stringify({
         success: false,
-        message: 'No prompt provided'
+        messages: [{
+          type: 'mood',
+          content: 'No prompt provided'
+        }]
       }), {
         status: 400,
         headers: {
@@ -42,7 +48,10 @@ export async function POST(request: Request) {
     
     return new Response(JSON.stringify({
       success: false,
-      message: error instanceof Error ? error.message : 'An unexpected error occurred'
+      messages: [{
+        type: 'mood',
+        content: error instanceof Error ? error.message : 'An unexpected error occurred'
+      }]
     }), {
       status: 500,
       headers: {

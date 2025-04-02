@@ -1,113 +1,116 @@
-# StratosFi - Crypto Sentiment Analysis Platform
+# StratosFi - Cryptocurrency Sentiment Analysis Assistant
 
 ## Overview
-StratosFi is a modern Web3 platform that provides real-time cryptocurrency sentiment analysis through Twitter data integration. The platform helps users make informed trading decisions by analyzing social media sentiment and market trends.
+StratosFi is an AI-powered cryptocurrency sentiment analysis platform that provides real-time community mood analysis and insights for major cryptocurrencies. The application integrates with Solana wallets for secure user authentication and chat history persistence.
 
 ## Features
-- **Real-time Sentiment Analysis**: Analyze Twitter discussions about cryptocurrencies
-- **Flexible Time Ranges**: Query sentiment data from 1 hour up to 4 weeks
-- **Support for Major Cryptocurrencies**: Including BTC, ETH, SOL, ADA, DOT, AVAX, and more
-- **Interactive Chat Interface**: Natural language processing for easy data queries
-- **Comprehensive Tweet Metrics**: Track likes, retweets, replies, and user engagement
-- **Web3 Integration**: Built-in Solana wallet connection support
-- **Modern UI**: Space-themed design with dynamic animations
-- **Responsive Design**: Fully responsive across all devices
-
-## Tech Stack
-- **Frontend**: Next.js 13+, TypeScript, Tailwind CSS
-- **API Integration**: Twitter API via twitterapi.io
-- **Authentication**: Environment-based API key management
-- **State Management**: React hooks and context
-- **UI Components**: Custom-built components with Tailwind
-- **Web3**: Solana Web3.js and Wallet Adapter
-- **Animations**: Framer Motion
-
-## Project Structure
-```
-stratosfi/
-├── src/
-│   ├── app/            # Next.js app router pages
-│   │   ├── components/ # Page-specific components
-│   │   ├── chat/      # Chat interface
-│   │   ├── utils/     # Utility functions
-│   │   └── providers/ # Context providers
-│   └── components/    # Shared UI components
-```
-
-## Getting Started
-
-### Prerequisites
-- Node.js 16+
-- pnpm (recommended package manager)
-- Twitter API key from twitterapi.io
-
-### Environment Setup
-Create a `.env.local` file in the root directory:
-```env
-TWITTER_API_KEY=your_api_key_here
-```
-
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/stratosfi.git
-
-# Install dependencies
-pnpm install
-
-# Run development server
-pnpm dev
-```
-
-## Usage
-1. Launch the application
-2. Use the chat interface to query cryptocurrency sentiment
-3. Format your queries like: "What is BTC like in the last hour?"
-4. View real-time sentiment analysis results
-
-## Query Examples
-- "How is ETH doing in the last 24 hours?"
-- "Show me BTC sentiment for the past week"
-- "What's the sentiment for SOL in the last hour?"
-
-## Time Range Support
-- Hours: 1h minimum
-- Days: 1-30 days
-- Weeks: Up to 4 weeks
-
-## Features in Detail
 
 ### Sentiment Analysis
-- Real-time processing of Twitter data
-- Social media sentiment tracking
-- Customizable time ranges
-- Support for major cryptocurrencies
+- **Real-time Mood Analysis**: Analyzes community sentiment for major cryptocurrencies (BTC, ETH, SOL, DOGE, XRP, ADA)
+- **Timeframe Support**: Supports various analysis timeframes (1 hour, 24 hours, 1 week, 1 month)
+- **Mood Visualization**: Displays sentiment scores with color-coded indicators:
+  - Red (< 2.5/5): Bearish sentiment
+  - Orange (2.5-3.5/5): Neutral sentiment
+  - Green (> 3.5/5): Bullish sentiment
 
-### Web3 Integration
-- Solana wallet connection
-- Support for Phantom and Solflare wallets
-- Devnet integration
-- Wallet state management
+### Chat Interface
+- **Interactive AI Assistant**: Conversational interface for sentiment analysis queries
+- **Multi-Message Format**: Structured response format with:
+  1. Community mood score (color-coded)
+  2. Key market insights
+  3. Significant events
+- **Message History**: Persistent chat history tied to user's wallet address
 
-### User Interface
-- Dynamic space-themed background
-- Smooth animations with Framer Motion
-- Responsive design
-- Interactive chat panel
-- Trading bot panel
-- Wallet connection panel
+### Wallet Integration
+- **Solana Wallet Support**: Compatible with major Solana wallets (Phantom, Solflare)
+- **Secure Authentication**: Wallet-based user authentication
+- **Data Persistence**: Chat history stored and retrieved based on wallet address
+- **Automatic Sync**: Seamless synchronization of chat history across sessions
 
-## Development Guidelines
-- Follow TypeScript best practices
-- Maintain component modularity
-- Ensure proper error handling
-- Write clean, maintainable code
-- Use Tailwind CSS for styling
+## Technical Implementation
 
-## Legal Notice
-© 2024 StratosFi. All rights reserved. This is a private repository and proprietary software. No part of this codebase may be reproduced, distributed, or transmitted in any form or by any means without the prior written permission of the copyright holder.
+### Core Components
+1. **Twitter Analysis Engine**
+   - Fetches and analyzes community tweets
+   - Implements sentiment scoring algorithm
+   - Filters and categorizes market events and insights
 
-## Acknowledgments
-- Built with twitterapi.io
-- Powered by Next.js and TypeScript
-- Solana blockchain integration
+2. **Chat System**
+   - Real-time message processing
+   - Structured response formatting
+   - Debounced chat history saving
+
+3. **Wallet Integration**
+   - Secure wallet connection handling
+   - Local storage management for chat persistence
+   - Automatic state synchronization
+
+### API Structure
+- **Endpoint**: `/api/chat`
+- **Method**: POST
+- **Request Format**: `{ prompt: string }`
+- **Response Format**:
+```typescript
+{
+  success: boolean;
+  messages: Array<{
+    type: 'mood' | 'insights' | 'events';
+    content: string;
+    colorValue?: {
+      value: string;
+      color: string;
+    };
+  }>;
+}
+```
+
+## Usage Examples
+
+### Basic Query
+```
+User: "what is sol like in the last hour"
+Assistant: 
+1. "Community Mood for SOL: 3.8/5" (in green)
+2. "Key Insights: [relevant market insights]"
+3. "Significant Events: [relevant events]"
+```
+
+### Timeframe Specification
+Supports natural language timeframes:
+- "last hour"
+- "last 24 hours"
+- "last week"
+- "last month"
+
+## Technical Requirements
+- Node.js
+- Next.js
+- Solana Web3.js
+- Twitter API access
+- DeepSeek API key for sentiment analysis
+
+## Environment Setup
+Required environment variables:
+- `DEEPSEEK_API_KEY`: For sentiment analysis
+- `TWITTER_API_KEY`: For tweet fetching
+- Additional configuration for Solana network and RPC endpoints
+
+## Security Features
+- Secure wallet integration
+- API key protection
+- Rate limiting
+- Error handling and validation
+- Secure data persistence
+
+## Error Handling
+- Graceful handling of API failures
+- User-friendly error messages
+- Automatic retry mechanisms
+- Connection state management
+
+## Future Enhancements
+- Support for additional cryptocurrencies
+- Advanced technical analysis integration
+- Enhanced data visualization
+- Multi-wallet support
+- Historical trend analysis
