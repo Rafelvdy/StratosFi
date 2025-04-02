@@ -362,6 +362,34 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
               </svg>
             </motion.button>
 
+            {/* KOL Treasury Button */}
+            <motion.button
+              onClick={() => {/* TODO: Add KOL Treasury handler */}}
+              className="absolute -right-[180px] top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ delay: 0.2 }}
+            >
+              <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">
+                KOL Treasury
+              </span>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5 text-[#FFD700] group-hover:scale-110 transition-transform duration-300" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2}
+                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
+                />
+              </svg>
+            </motion.button>
+
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-[#6C3CE9]/30 shrink-0">
               <div className="flex items-center space-x-3">
@@ -373,14 +401,38 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                 </div>
                 <h2 className="text-xl font-medium text-white">Stratos AI</h2>
               </div>
-              <button 
-                onClick={onClose}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => {/* TODO: Add KOL Treasury handler */}}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group"
+                >
+                  <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent whitespace-nowrap">
+                    KOL Treasury
+                  </span>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-5 w-5 text-[#FFD700] group-hover:scale-110 transition-transform duration-300" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2}
+                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
+                    />
+                  </svg>
+                </button>
+                <button 
+                  onClick={onClose}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Messages Container */}
