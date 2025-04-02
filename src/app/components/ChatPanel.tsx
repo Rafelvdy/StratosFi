@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { saveChatToWallet, loadChatFromWallet, clearChatForWallet } from '../utils/walletStorage'
+import { saveChatToWallet, loadChatFromWallet, STORAGE_PREFIX } from '../utils/walletStorage'
 import { debounce } from 'lodash'
 
 interface ChatPanelProps {
@@ -18,6 +18,18 @@ export interface ChatMessage {
   timestamp: Date
 }
 
+const debugStorage = (action: string, walletAddress: string) => {
+  const key = `${STORAGE_PREFIX}${walletAddress}`;
+  const data = localStorage.getItem(key);
+  console.log(`Storage Debug [${action}]:`, {
+    key,
+    hasData: !!data,
+    dataSize: data?.length,
+    allKeys: Object.keys(localStorage),
+    timestamp: new Date().toISOString()
+  });
+};
+
 export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   const { connected, publicKey } = useWallet()
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -31,59 +43,103 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   const [input, setInput] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const previousWalletRef = useRef<string | null>(null)
 
   // Create debounced save function
   const debouncedSave = useRef(
     debounce((walletAddress: string, msgs: ChatMessage[]) => {
       try {
+        console.log('Saving chat history...', {
+          walletAddress,
+          messageCount: msgs.length
+        });
         saveChatToWallet(walletAddress, msgs);
+        
+        // Verify save was successful
+        debugStorage('SAVE', walletAddress);
       } catch (error) {
         console.error('Failed to save chat history:', error);
-        // Could add user notification here if needed
       }
     }, 1000)
   ).current;
 
   // Load chat history when wallet connects
   useEffect(() => {
-    if (connected && publicKey) {
+    const currentWallet = publicKey?.toBase58() || null;
+    
+    // Debug storage state
+    if (currentWallet) {
+      debugStorage('CONNECT', currentWallet);
+    }
+
+    if (connected && currentWallet) {
+      // Check storage before loading
+      const key = `${STORAGE_PREFIX}${currentWallet}`;
+      const rawData = localStorage.getItem(key);
+      console.log('Pre-load storage check:', { key, hasData: !!rawData });
+
       try {
-        const savedMessages = loadChatFromWallet(publicKey.toBase58())
-        if (savedMessages) {
-          setMessages(savedMessages)
+        const savedMessages = loadChatFromWallet(currentWallet);
+        if (savedMessages && savedMessages.length > 0) {
+          setMessages(savedMessages);
         }
       } catch (error) {
         console.error('Failed to load chat history:', error);
-        // Could add user notification here if needed
       }
-    } else {
-      // Reset to default message when wallet disconnects
+    } else if (!connected && previousWalletRef.current) {
+      // On disconnect, save current state before resetting UI
+      const disconnectingWallet = previousWalletRef.current;
+      if (messages.length > 1) {
+        saveChatToWallet(disconnectingWallet, messages);
+      }
+      debugStorage('DISCONNECT', disconnectingWallet);
+      
+      // Reset UI only
       setMessages([{
         id: '1',
         role: 'assistant',
         content: 'Hello! I am Stratos AI, your personal sentiment analysis assistant. How can I help you today?',
         timestamp: new Date()
-      }])
-      if (publicKey) {
-        try {
-          clearChatForWallet(publicKey.toBase58())
-        } catch (error) {
-          console.error('Failed to clear chat history:', error);
-        }
-      }
+      }]);
     }
-  }, [connected, publicKey])
+
+    previousWalletRef.current = currentWallet;
+  }, [connected, publicKey]);
+
+  // Add storage persistence check
+  useEffect(() => {
+    if (connected && publicKey) {
+      const walletAddress = publicKey.toBase58();
+      const key = `${STORAGE_PREFIX}${walletAddress}`;
+      const checkInterval = setInterval(() => {
+        const data = localStorage.getItem(key);
+        console.log('Storage persistence check:', {
+          key,
+          hasData: !!data,
+          timestamp: new Date().toISOString()
+        });
+      }, 5000);
+
+      return () => clearInterval(checkInterval);
+    }
+  }, [connected, publicKey]);
 
   // Save chat history when messages change
   useEffect(() => {
     if (connected && publicKey && messages.length > 1) {
-      debouncedSave(publicKey.toBase58(), messages);
+      const walletAddress = publicKey.toBase58();
+      console.log('Saving chat history:', {
+        walletAddress,
+        messageCount: messages.length,
+        storageKey: `${STORAGE_PREFIX}${walletAddress}`
+      });
+      
+      debouncedSave(walletAddress, messages);
     }
-  }, [messages, connected, publicKey, debouncedSave])
+  }, [messages, connected, publicKey, debouncedSave]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -129,8 +185,6 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
       timestamp: new Date()
     }
     setMessages(prev => [...prev, userMessage])
-    setInput('')
-    setError(null)
     setIsLoading(true)
 
     try {
@@ -142,38 +196,36 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
         body: JSON.stringify({ prompt: input }),
       })
 
-      // Handle non-JSON responses
       const contentType = response.headers.get('content-type')
       if (!contentType || !contentType.includes('application/json')) {
-        console.error('Non-JSON response:', await response.text())
         throw new Error('Server returned non-JSON response')
       }
 
       const data = await response.json()
       console.log('DEBUG: Chat API Response:', data)
 
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.success ? data.message : (
+          data.message || "An internal server error occurred. Please try again."
+        ),
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, assistantMessage])
+      
       if (data.success) {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: data.message,
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      } else {
-        let errorMessage = data.message
-        if (response.status === 500) {
-          errorMessage = "An internal server error occurred. Please try again."
-        }
-        setError(errorMessage)
-        if (!errorMessage.includes('timeframe')) {
-          setMessages(prev => prev.slice(0, -1))
-        }
+        setInput('') // Only clear input on success
       }
     } catch (err) {
       console.error('Error:', err)
-      setError('Failed to get response. Please try again.')
-      setMessages(prev => prev.slice(0, -1))
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Failed to get response. Please try again.',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, assistantMessage])
     } finally {
       setIsLoading(false)
     }
@@ -324,13 +376,6 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                       <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-100" />
                       <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-200" />
                     </div>
-                  </div>
-                </div>
-              )}
-              {error && (
-                <div className="flex justify-center">
-                  <div className="bg-red-500/10 border border-red-500/30 text-red-500 rounded-2xl p-4">
-                    {error}
                   </div>
                 </div>
               )}

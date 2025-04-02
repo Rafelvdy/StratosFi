@@ -5,7 +5,7 @@ interface ChatHistory {
     lastUpdated: string;
 }
 
-const STORAGE_PREFIX = 'stratosfi_chat_';
+export const STORAGE_PREFIX = 'stratosfi_chat_';
 
 class WalletStorageError extends Error {
     constructor(message: string, public readonly code: string) {
@@ -46,7 +46,10 @@ export function saveChatToWallet(walletAddress: string, messages: ChatMessage[])
 export function loadChatFromWallet(walletAddress: string): ChatMessage[] | null {
     try {
         const storedData = localStorage.getItem(`${STORAGE_PREFIX}${walletAddress}`);
-        if (!storedData) return null;
+        if (!storedData) {
+            console.log('No stored data found for wallet:', walletAddress);
+            return null;
+        }
 
         const chatHistory: ChatHistory = JSON.parse(storedData);
         
@@ -55,10 +58,13 @@ export function loadChatFromWallet(walletAddress: string): ChatMessage[] | null 
             throw new WalletStorageError('Invalid chat history format', 'INVALID_FORMAT');
         }
 
-        return chatHistory.messages.map(msg => ({
+        const messages = chatHistory.messages.map(msg => ({
             ...msg,
             timestamp: new Date(msg.timestamp)
         }));
+
+        console.log('Loaded messages for wallet:', walletAddress, messages);
+        return messages;
     } catch (error) {
         console.error('Error loading chat from wallet:', error);
         if (error instanceof WalletStorageError) {
@@ -73,6 +79,7 @@ export function loadChatFromWallet(walletAddress: string): ChatMessage[] | null 
 
 export function clearChatForWallet(walletAddress: string): void {
     try {
+        console.log('Clearing chat for wallet:', walletAddress);
         localStorage.removeItem(`${STORAGE_PREFIX}${walletAddress}`);
         
         // Verify the clear was successful
