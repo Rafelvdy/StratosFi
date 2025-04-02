@@ -88,6 +88,27 @@ function getMoodColor(mood: number): string {
     return '#00c853'; // Green for bullish/positive
 }
 
+// Add function to check if content is relevant to ticker
+function isTickerRelevant(content: string, ticker: string): boolean {
+    const tickerPattern = new RegExp(`\\b${ticker}\\b|\\$${ticker}\\b|#${ticker}\\b`, 'i');
+    return tickerPattern.test(content);
+}
+
+// Add function to check for cross-ticker relationships
+function hasCrossTickerRelationship(content: string, mainTicker: string, mentionedTicker: string): boolean {
+    const relationshipPatterns = [
+        `${mentionedTicker}.*impact.*${mainTicker}`,
+        `${mentionedTicker}.*affect.*${mainTicker}`,
+        `${mentionedTicker}.*influence.*${mainTicker}`,
+        `correlation.*${mentionedTicker}.*${mainTicker}`,
+        `relationship.*${mentionedTicker}.*${mainTicker}`
+    ];
+    
+    return relationshipPatterns.some(pattern => 
+        new RegExp(pattern, 'i').test(content)
+    );
+}
+
 // Main analysis function
 export async function analyzeCryptoSentiment(message: string): Promise<{
     success: boolean;
@@ -130,10 +151,24 @@ export async function analyzeCryptoSentiment(message: string): Promise<{
             }
         });
 
-        // Add insights if available
+        // Filter and format insights
         if (analysis.insights && analysis.insights.length > 0) {
             const relevantInsights = analysis.insights
-                .filter(insight => insight && !insight.includes('[None]') && !insight.includes('[Omitted]'))
+                .filter(insight => {
+                    if (!insight) return false;
+                    
+                    // Check if insight is directly about the queried ticker
+                    if (isTickerRelevant(insight, params.ticker)) return true;
+                    
+                    // Check for cross-ticker relationships
+                    const otherTickers = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA']
+                        .filter(t => t !== params.ticker.toUpperCase());
+                    
+                    return otherTickers.some(otherTicker => 
+                        insight.includes(otherTicker) && 
+                        hasCrossTickerRelationship(insight, params.ticker.toUpperCase(), otherTicker)
+                    );
+                })
                 .map(insight => `• ${insight.trim()}`);
 
             if (relevantInsights.length > 0) {
@@ -144,10 +179,24 @@ export async function analyzeCryptoSentiment(message: string): Promise<{
             }
         }
 
-        // Add events if available
+        // Filter and format events
         if (analysis.events && analysis.events.length > 0) {
             const relevantEvents = analysis.events
-                .filter(event => event && !event.includes('[None]') && !event.includes('[Omitted]'))
+                .filter(event => {
+                    if (!event) return false;
+                    
+                    // Check if event is directly about the queried ticker
+                    if (isTickerRelevant(event, params.ticker)) return true;
+                    
+                    // Check for cross-ticker relationships
+                    const otherTickers = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA']
+                        .filter(t => t !== params.ticker.toUpperCase());
+                    
+                    return otherTickers.some(otherTicker => 
+                        event.includes(otherTicker) && 
+                        hasCrossTickerRelationship(event, params.ticker.toUpperCase(), otherTicker)
+                    );
+                })
                 .map(event => `• ${event.trim()}`);
 
             if (relevantEvents.length > 0) {

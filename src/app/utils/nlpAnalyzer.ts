@@ -28,7 +28,13 @@ interface AnalysisResult {
     insights: string[];
 }
 
-// Analysis prompt for sentiment analysis
+// Add new function to clean internal tags
+function cleanResponseContent(content: string): string {
+    // Remove all internal tags and markers
+    return content.replace(/\[(Omit|None|Omitted)\]/g, '').trim();
+}
+
+// Update the ANALYSIS_PROMPT to be more explicit
 const ANALYSIS_PROMPT = `You are a Crypto Community Mood Analyzer that processes tweets to extract sentiment while filtering out noise. Your primary outputs are:
 
 1. COMMUNITY MOOD VALUE: Assign a score from 1-5 where:
@@ -42,26 +48,33 @@ const ANALYSIS_PROMPT = `You are a Crypto Community Mood Analyzer that processes
    - Identify specific events/catalysts mentioned that are directly impacting the cryptocurrency
    - Note only substantial developments (exchange listings, protocol upgrades, hacks, regulatory actions)
    - Exclude minor news, speculation, or routine market movements
+   - DO NOT use any internal markers or tags in the output
 
 3. HIGH-VALUE INSIGHTS (extremely selective):
    - Surface only truly valuable/unique information not commonly known
    - Include only if the content provides exceptional utility or alpha
-   - Omit standard opinions, typical market commentary, or common sentiments
+   - Exclude standard opinions, typical market commentary, or common sentiments
+   - DO NOT use any internal markers or tags in the output
 
 Format your response as:
 MOOD VALUE: [1-5]
-EVENT: [Only if significant event detected - otherwise omit this field]
-INSIGHT: [Only if exceptional value detected - otherwise omit this field]
+EVENT: [Specific event without any internal markers]
+INSIGHT: [Clear insight without any internal markers]
 
-Prioritize accurate mood assessment above all else. Most responses should only include the MOOD VALUE with other fields appearing only when truly warranted.`;
+Important:
+- Never use [Omit], [None], [Omitted] or any other internal markers
+- Keep responses clean and direct
+- Only include EVENT and INSIGHT fields when truly significant information exists`;
 
+// Update parseAnalysisResponse to use the cleaning function
 function parseAnalysisResponse(content: string): MoodAnalysis {
-    const moodMatch = content.match(/MOOD VALUE:\s*(\d)/);
-    const eventMatch = content.match(/EVENT:\s*(.+?)(?=\n|$)/);
-    const insightMatch = content.match(/INSIGHT:\s*(.+?)(?=\n|$)/);
+    const cleanContent = cleanResponseContent(content);
+    const moodMatch = cleanContent.match(/MOOD VALUE:\s*(\d)/);
+    const eventMatch = cleanContent.match(/EVENT:\s*(.+?)(?=\n|$)/);
+    const insightMatch = cleanContent.match(/INSIGHT:\s*(.+?)(?=\n|$)/);
 
     return {
-        mood: moodMatch ? parseInt(moodMatch[1]) : 3, // Default to neutral if no match
+        mood: moodMatch ? parseInt(moodMatch[1]) : 3,
         events: eventMatch ? [eventMatch[1].trim()] : undefined,
         insights: insightMatch ? [insightMatch[1].trim()] : undefined
     };

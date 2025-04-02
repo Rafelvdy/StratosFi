@@ -21,6 +21,7 @@ export interface ChatMessage {
     value: string
     color: string
   }
+  isExpanded?: boolean
 }
 
 const debugStorage = (action: string, walletAddress: string) => {
@@ -37,9 +38,10 @@ const debugStorage = (action: string, walletAddress: string) => {
 
 export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   const { connected, publicKey } = useWallet()
+  const messageCounterRef = useRef(1);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: '1',
+      id: 'welcome-0',
       role: 'assistant',
       content: 'Hello! I am Stratos AI, your personal sentiment analysis assistant. How can I help you today?',
       timestamp: new Date()
@@ -52,6 +54,23 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const previousWalletRef = useRef<string | null>(null)
+
+  interface ExpandedState {
+    insights: boolean;
+    events: boolean;
+  }
+  
+  const [expandedSections, setExpandedSections] = useState<{[key: string]: ExpandedState}>({});
+  
+  const toggleSection = (messageId: string, section: keyof ExpandedState) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [messageId]: {
+        ...prev[messageId] || { insights: false, events: false },
+        [section]: !prev[messageId]?.[section]
+      }
+    }));
+  };
 
   // Create debounced save function
   const debouncedSave = useRef(
@@ -104,7 +123,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
       
       // Reset UI only
       setMessages([{
-        id: '1',
+        id: 'welcome-0',
         role: 'assistant',
         content: 'Hello! I am Stratos AI, your personal sentiment analysis assistant. How can I help you today?',
         timestamp: new Date()
@@ -184,7 +203,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     if (!input.trim() || isLoading) return
 
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${messageCounterRef.current++}`,
       role: 'user',
       content: input,
       timestamp: new Date()
@@ -216,7 +235,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
         // Add each message separately
         for (const msg of data.messages) {
           const assistantMessage: ChatMessage = {
-            id: Date.now().toString(),
+            id: `${Date.now()}-${messageCounterRef.current++}`,
             role: 'assistant',
             content: msg.content,
             timestamp: new Date(),
@@ -227,7 +246,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
       } else {
         // Handle error case
         const errorMessage: ChatMessage = {
-          id: Date.now().toString(),
+          id: `${Date.now()}-${messageCounterRef.current++}`,
           role: 'assistant',
           content: "I couldn't process that request. Please try asking about cryptocurrency sentiment (e.g., BTC, ETH, SOL).",
           timestamp: new Date()
@@ -237,7 +256,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     } catch (err) {
       console.error('Error:', err)
       const assistantMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${messageCounterRef.current++}`,
         role: 'assistant',
         content: "I'm having trouble processing requests right now. Please try again in a moment.",
         timestamp: new Date()
@@ -378,21 +397,105 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                         : 'bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white'
                     }`}
                   >
-                    {message.colorValue && message.colorValue.value ? (
+                    {message.colorValue ? (
                       <p>
                         {message.content.split(message.colorValue.value).map((part, i, arr) => (
-                          <React.Fragment key={i}>
+                          <React.Fragment key={`${message.id}-color-${i}`}>
                             {part}
-                            {i < arr.length - 1 && (
-                              <span style={{ color: message.colorValue?.color }}>
-                                {message.colorValue?.value}
+                            {i < arr.length - 1 && message.colorValue && (
+                              <span style={{ color: message.colorValue.color }}>
+                                {message.colorValue.value}
                               </span>
                             )}
                           </React.Fragment>
                         ))}
                       </p>
                     ) : (
-                      <p>{message.content}</p>
+                      <div className="space-y-2">
+                        {message.content.includes('Key Insights:') || message.content.includes('Significant Events:') ? (
+                          <>
+                            {(() => {
+                              const sections = {
+                                insights: message.content.includes('Key Insights:') ? 
+                                  message.content.substring(
+                                    message.content.indexOf('Key Insights:'),
+                                    message.content.includes('Significant Events:') ? 
+                                      message.content.indexOf('Significant Events:') : 
+                                      undefined
+                                  ) : '',
+                                events: message.content.includes('Significant Events:') ?
+                                  message.content.substring(message.content.indexOf('Significant Events:')) : ''
+                              };
+
+                              return (
+                                <>
+                                  {/* Render Key Insights section */}
+                                  {sections.insights && (
+                                    <div className="mb-4">
+                                      <p className="font-medium mb-2">Key Insights:</p>
+                                      {(() => {
+                                        const lines = sections.insights.split('\n').slice(1);
+                                        const isExpanded = expandedSections[message.id]?.insights;
+                                        const displayLines = isExpanded ? lines : lines.slice(0, 1);
+                                        
+                                        return (
+                                          <>
+                                            {displayLines.map((line, index) => (
+                                              <div key={`${message.id}-insight-${index}`} className="pl-4 -mt-1">
+                                                <p className="whitespace-pre-line">{line.trim()}</p>
+                                              </div>
+                                            ))}
+                                            {lines.length > 1 && (
+                                              <button
+                                                onClick={() => toggleSection(message.id, 'insights')}
+                                                className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors"
+                                              >
+                                                {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
+                                              </button>
+                                            )}
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
+
+                                  {/* Render Significant Events section */}
+                                  {sections.events && (
+                                    <div>
+                                      <p className="font-medium mb-2">Significant Events:</p>
+                                      {(() => {
+                                        const lines = sections.events.split('\n').slice(1);
+                                        const isExpanded = expandedSections[message.id]?.events;
+                                        const displayLines = isExpanded ? lines : lines.slice(0, 1);
+                                        
+                                        return (
+                                          <>
+                                            {displayLines.map((line, index) => (
+                                              <div key={`${message.id}-event-${index}`} className="pl-4 -mt-1">
+                                                <p className="whitespace-pre-line">{line.trim()}</p>
+                                              </div>
+                                            ))}
+                                            {lines.length > 1 && (
+                                              <button
+                                                onClick={() => toggleSection(message.id, 'events')}
+                                                className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors"
+                                              >
+                                                {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
+                                              </button>
+                                            )}
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </>
+                        ) : (
+                          <p>{message.content}</p>
+                        )}
+                      </div>
                     )}
                     <p className="text-xs opacity-70 mt-1 text-right">
                       {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
