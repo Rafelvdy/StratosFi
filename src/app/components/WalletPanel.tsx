@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect } from 'react';
+import { clearChatForWallet } from '../utils/walletStorage';
 
 interface WalletPanelProps {
   isOpen: boolean;
@@ -11,13 +12,33 @@ interface WalletPanelProps {
 }
 
 export function WalletPanel({ isOpen, onClose }: WalletPanelProps) {
-  const { connected, publicKey } = useWallet();
+  const { connected, publicKey, disconnect } = useWallet();
   const [error, setError] = useState<string | null>(null);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   // Reset error when panel opens/closes
   useEffect(() => {
     setError(null);
   }, [isOpen]);
+
+  const handleDisconnect = async () => {
+    if (!publicKey) return;
+    
+    setIsDisconnecting(true);
+    setError(null);
+    
+    try {
+      // Clear stored chat data
+      clearChatForWallet(publicKey.toBase58());
+      // Disconnect wallet
+      await disconnect();
+    } catch (err) {
+      console.error('Failed to disconnect:', err);
+      setError('Failed to disconnect wallet. Please try again.');
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -49,8 +70,17 @@ export function WalletPanel({ isOpen, onClose }: WalletPanelProps) {
                     </div>
                   )}
                   {connected ? (
-                    <div className="text-green-400">
-                      Connected: {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}
+                    <div className="space-y-4">
+                      <div className="text-green-400">
+                        Connected: {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}
+                      </div>
+                      <button
+                        onClick={handleDisconnect}
+                        disabled={isDisconnecting}
+                        className="w-full py-2 px-4 bg-red-500 hover:bg-red-600 disabled:bg-red-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                      >
+                        {isDisconnecting ? 'Disconnecting...' : 'Disconnect Wallet'}
+                      </button>
                     </div>
                   ) : (
                     <div className="flex justify-center">
