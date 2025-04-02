@@ -67,60 +67,128 @@ function parseAnalysisResponse(content: string): MoodAnalysis {
     };
 }
 
+// Function to check if two tweets are similar
+function areTweetsSimilar(tweet1: string, tweet2: string): boolean {
+    // Convert to lowercase and remove common noise
+    const clean1 = tweet1.toLowerCase().replace(/[^\w\s]/g, '');
+    const clean2 = tweet2.toLowerCase().replace(/[^\w\s]/g, '');
+    
+    // Split into words
+    const words1 = clean1.split(/\s+/);
+    const words2 = clean2.split(/\s+/);
+    
+    // Calculate word overlap
+    const commonWords = words1.filter(word => words2.includes(word));
+    const similarity = commonWords.length / Math.max(words1.length, words2.length);
+    
+    // Consider tweets similar if they share more than 70% of their words
+    return similarity > 0.7;
+}
+
+// Function to filter tweets
+function filterTweets(tweets: { text: string }[]): { text: string }[] {
+    const filtered: { text: string }[] = [];
+    const seen = new Set<string>();
+    
+    for (const tweet of tweets) {
+        // Skip exact duplicates
+        if (seen.has(tweet.text)) continue;
+        
+        // Check for similar tweets
+        const isSimilar = filtered.some(existingTweet => 
+            areTweetsSimilar(tweet.text, existingTweet.text)
+        );
+        
+        if (!isSimilar) {
+            filtered.push(tweet);
+            seen.add(tweet.text);
+        }
+    }
+    
+    return filtered;
+}
+
 // Function to analyze tweets
 export async function analyzeTweets(tweets: { text: string }[]): Promise<AnalysisResult> {
     if (!tweets || tweets.length === 0) {
         throw new Error('No tweets provided for analysis');
     }
 
+    // Filter tweets before processing
+    const filteredTweets = filterTweets(tweets);
+    console.log(`Filtered ${tweets.length - filteredTweets.length} duplicate/similar tweets`);
+
     const analyses: MoodAnalysis[] = [];
     const allEvents = new Set<string>();
     const allInsights = new Set<string>();
 
-    // Process each tweet through DeepSeek
-    for (const tweet of tweets) {
-        try {
-            const request: DeepSeekRequest = {
-                model: 'deepseek-chat',
-                messages: [
-                    { role: 'system', content: ANALYSIS_PROMPT },
-                    { role: 'user', content: tweet.text }
-                ]
-            };
+    // Process tweets in batches of 10
+    const batchSize = 10;
+    const batches = [];
+    
+    // Create batches
+    for (let i = 0; i < filteredTweets.length; i += batchSize) {
+        batches.push(filteredTweets.slice(i, i + batchSize));
+    }
 
-            const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-                },
-                body: JSON.stringify(request)
-            });
+    try {
+        // Process all batches in parallel
+        const batchResults = await Promise.all(
+            batches.map(async (batch) => {
+                // Combine batch tweets with separator
+                const batchContent = batch.map(tweet => tweet.text).join('\n[NEXT_TWEET]\n');
+                
+                const request: DeepSeekRequest = {
+                    model: 'deepseek-chat',
+                    messages: [
+                        { role: 'system', content: ANALYSIS_PROMPT },
+                        { role: 'user', content: batchContent }
+                    ]
+                };
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('DeepSeek API error:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    error: errorText
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify(request)
                 });
-                throw new Error(`DeepSeek API error: ${response.statusText}`);
-            }
 
-            const data: DeepSeekResponse = await response.json();
-            if (!data || !data.choices || !data.choices[0]?.message?.content) {
-                throw new Error('Invalid response format from DeepSeek API');
-            }
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('DeepSeek API error:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        error: errorText
+                    });
+                    throw new Error(`DeepSeek API error: ${response.statusText}`);
+                }
 
-            const analysis = parseAnalysisResponse(data.choices[0].message.content);
-            analyses.push(analysis);
-            if (analysis.events) analysis.events.forEach(e => allEvents.add(e));
-            if (analysis.insights) analysis.insights.forEach(i => allInsights.add(i));
+                const data: DeepSeekResponse = await response.json();
+                if (!data || !data.choices || !data.choices[0]?.message?.content) {
+                    throw new Error('Invalid response format from DeepSeek API');
+                }
 
-        } catch (error) {
-            console.error('Error analyzing tweet:', error);
-            throw error; // Propagate error to be handled by UI
-        }
+                // Split response into individual tweet analyses
+                return data.choices[0].message.content
+                    .split('[NEXT_TWEET]')
+                    .map(content => parseAnalysisResponse(content.trim()));
+            })
+        );
+
+        // Combine all batch results
+        batchResults.forEach(batchAnalyses => {
+            analyses.push(...batchAnalyses);
+            batchAnalyses.forEach(analysis => {
+                if (analysis.events) analysis.events.forEach(e => allEvents.add(e));
+                if (analysis.insights) analysis.insights.forEach(i => allInsights.add(i));
+            });
+        });
+
+    } catch (error) {
+        console.error('Error analyzing tweet batches:', error);
+        throw error; // Propagate error to be handled by UI
     }
 
     if (analyses.length === 0) {

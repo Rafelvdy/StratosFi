@@ -2,13 +2,16 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { saveChatToWallet, loadChatFromWallet, clearChatForWallet } from '../utils/walletStorage'
+import { debounce } from 'lodash'
 
 interface ChatPanelProps {
   isOpen: boolean
   onClose: () => void
 }
 
-interface ChatMessage {
+export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
@@ -16,6 +19,7 @@ interface ChatMessage {
 }
 
 export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
+  const { connected, publicKey } = useWallet()
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -31,6 +35,62 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+
+  // Create debounced save function
+  const debouncedSave = useRef(
+    debounce((walletAddress: string, msgs: ChatMessage[]) => {
+      try {
+        saveChatToWallet(walletAddress, msgs);
+      } catch (error) {
+        console.error('Failed to save chat history:', error);
+        // Could add user notification here if needed
+      }
+    }, 1000)
+  ).current;
+
+  // Load chat history when wallet connects
+  useEffect(() => {
+    if (connected && publicKey) {
+      try {
+        const savedMessages = loadChatFromWallet(publicKey.toBase58())
+        if (savedMessages) {
+          setMessages(savedMessages)
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+        // Could add user notification here if needed
+      }
+    } else {
+      // Reset to default message when wallet disconnects
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: 'Hello! I am Stratos AI, your personal sentiment analysis assistant. How can I help you today?',
+        timestamp: new Date()
+      }])
+      if (publicKey) {
+        try {
+          clearChatForWallet(publicKey.toBase58())
+        } catch (error) {
+          console.error('Failed to clear chat history:', error);
+        }
+      }
+    }
+  }, [connected, publicKey])
+
+  // Save chat history when messages change
+  useEffect(() => {
+    if (connected && publicKey && messages.length > 1) {
+      debouncedSave(publicKey.toBase58(), messages);
+    }
+  }, [messages, connected, publicKey, debouncedSave])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [debouncedSave]);
 
   // Scroll to bottom on new messages
   useEffect(() => {

@@ -72,6 +72,13 @@ export function extractSearchParams(message: string): SearchParams {
     return { ticker, timeframe };
 }
 
+// Function to get mood color
+function getMoodColor(mood: number): string {
+    if (mood < 2.5) return '<span style="color: #ff4444">'; // Red for bearish/negative
+    if (mood <= 3.5) return '<span style="color: #ffa500">'; // Orange for neutral
+    return '<span style="color: #00c853">'; // Green for bullish/positive
+}
+
 // Main analysis function
 export async function analyzeCryptoSentiment(message: string): Promise<{
     success: boolean;
@@ -96,8 +103,9 @@ export async function analyzeCryptoSentiment(message: string): Promise<{
         }
 
         const analysis = await analyzeTweets(tweets.community_tweets);
+        const moodColor = getMoodColor(analysis.averageMood);
         
-        let response = `Community Mood for ${params.ticker}: ${analysis.averageMood.toFixed(1)}/5\n\n`;
+        let response = `Community Mood for ${params.ticker}: ${moodColor}${analysis.averageMood.toFixed(1)}</span>/5\n\n`;
         
         if (analysis.events.length > 0) {
             response += "Significant Events:\n" + analysis.events.join("\n") + "\n\n";
