@@ -394,7 +394,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
             {/* Expand Arrow Button */}
             <motion.button
               onClick={toggleExpand}
-              className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1F2937]/80 backdrop-blur-md border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)]"
+              className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1F2937]/80 backdrop-blur-md border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer"
               variants={arrowVariants}
               initial="hidden"
               animate="visible"
@@ -407,7 +407,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
             {/* KOL Treasury Button */}
             <motion.button
               onClick={toggleKOLView}
-              className="absolute -right-[180px] top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group"
+              className="absolute -right-[180px] top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group cursor-pointer"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
@@ -446,7 +446,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
               <div className="flex items-center gap-4">
                 <button
                   onClick={toggleKOLView}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group cursor-pointer"
                 >
                   <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent whitespace-nowrap">
                     KOL Treasury
@@ -468,7 +468,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                 </button>
                 <button 
                   onClick={onClose}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -551,7 +551,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                                                 {lines.length > 1 && (
                                                   <button
                                                     onClick={() => toggleSection(message.id, 'insights')}
-                                                    className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors"
+                                                    className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors cursor-pointer"
                                                   >
                                                     {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
                                                   </button>
@@ -581,7 +581,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                                                 {lines.length > 1 && (
                                                   <button
                                                     onClick={() => toggleSection(message.id, 'events')}
-                                                    className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors"
+                                                    className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors cursor-pointer"
                                                   >
                                                     {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
                                                   </button>
@@ -634,7 +634,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                     />
                     <button 
                       type="submit"
-                      className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       disabled={isLoading || !input.trim()}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -675,7 +675,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                   </div>
                   <button
                     onClick={toggleKOLView}
-                    className="text-gray-400 hover:text-white transition-colors"
+                    className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

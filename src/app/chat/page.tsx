@@ -241,7 +241,7 @@ export default function ChatPage() {
           <nav className="flex flex-col items-center space-y-6">
             <div className="relative group">
               <button 
-                className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 ${
+                className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 cursor-pointer ${
                   isChatPanelOpen 
                     ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
                     : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
@@ -263,7 +263,7 @@ export default function ChatPage() {
             
             <div className="relative group">
               <button 
-                className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 ${
+                className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 cursor-pointer ${
                   isTradingBotPanelOpen 
                     ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
                     : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
