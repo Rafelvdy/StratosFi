@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Hourly analysis of cryptocurrency sentiment
+model HourlyAnalysis {
+  id            String   @id @default(cuid())
+  timestamp     DateTime
+  ticker        String
+  communityMood Float
+  keyInsights   Json     // Array of insights
+  keyEvents     Json     // Array of events
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([timestamp, ticker])
+  @@unique([timestamp, ticker])
+}
+
+// KOL tweets and their analysis
+model HourlyKOLTweets {
+  id            String   @id @default(cuid())
+  timestamp     DateTime
+  ticker        String
+  kolAccountId  String
+  keyInsight    String
+  keyEvent      String
+  influenceScore Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([timestamp, ticker, kolAccountId])
+  @@unique([timestamp, ticker, kolAccountId])
+}
+
+// Daily aggregated analysis
+model DailyAnalysis {
+  id            String   @id @default(cuid())
+  timestamp     DateTime
+  ticker        String
+  communityMood Float
+  keyInsights   Json     // All insights from the day
+  keyEvents     Json     // All events from the day
+  kolData       Json     // All KOL data from the day
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([timestamp, ticker])
+  @@unique([timestamp, ticker])
+}
+
+// Weekly aggregated analysis
+model WeeklyAnalysis {
+  id            String   @id @default(cuid())
+  timestamp     DateTime
+  ticker        String
+  communityMood Float
+  keyInsights   Json     // All insights from the week
+  keyEvents     Json     // All events from the week
+  kolData       Json     // All KOL data from the week
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([timestamp, ticker])
+  @@unique([timestamp, ticker])
+}
+
+// Monthly aggregated analysis
+model MonthlyAnalysis {
+  id            String   @id @default(cuid())
+  timestamp     DateTime
+  ticker        String
+  communityMood Float
+  keyInsights   Json     // All insights from the month
+  keyEvents     Json     // All events from the month
+  kolData       Json     // All KOL data from the month
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([timestamp, ticker])
+  @@unique([timestamp, ticker])
+}

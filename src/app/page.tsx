@@ -100,12 +100,12 @@ export default function Home() {
       particles.current = Array.from({ length: 80 }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: 0.5 + Math.random(),
+        size: 1 + Math.random(),
         speed: 0.05 + Math.random() * 0.1,
         color: getRandomColor(),
         opacity: 0,
-        targetOpacity: 0.3 + Math.random() * 0.4,
-        fadeSpeed: 0.01
+        targetOpacity: 0.5 + Math.random() * 0.5,
+        fadeSpeed: 0.02
       }))
     }
     initParticles()
