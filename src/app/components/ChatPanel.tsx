@@ -50,6 +50,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   const [input, setInput] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isKOLView, setIsKOLView] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -271,6 +272,10 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     setIsExpanded(prev => !prev)
   }
 
+  const toggleKOLView = () => {
+    setIsKOLView(prev => !prev)
+  }
+
   const panelVariants = {
     hidden: { x: '100%', opacity: 0 },
     visible: { 
@@ -326,6 +331,43 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     }
   }
 
+  const viewTransitionVariants = {
+    chat: {
+      x: '0%',
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30
+      }
+    },
+    kol: {
+      x: '-100%',
+      opacity: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30
+      }
+    }
+  }
+
+  const kolViewVariants = {
+    hidden: {
+      x: '100%',
+      opacity: 0
+    },
+    visible: {
+      x: '0%',
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30
+      }
+    }
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -364,7 +406,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
 
             {/* KOL Treasury Button */}
             <motion.button
-              onClick={() => {/* TODO: Add KOL Treasury handler */}}
+              onClick={toggleKOLView}
               className="absolute -right-[180px] top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -403,7 +445,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
               </div>
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => {/* TODO: Add KOL Treasury handler */}}
+                  onClick={toggleKOLView}
                   className="flex items-center gap-2 px-4 py-2 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group"
                 >
                   <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent whitespace-nowrap">
@@ -435,162 +477,220 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
               </div>
             </div>
 
-            {/* Messages Container */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 messages-container">
-              {messages.map(message => (
-                <div 
-                  key={message.id} 
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[80%] rounded-2xl p-4 ${
-                      message.role === 'user' 
-                        ? 'bg-[#6C3CE9] text-white' 
-                        : 'bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white'
-                    }`}
-                  >
-                    {message.colorValue ? (
-                      <p>
-                        {message.content.split(message.colorValue.value).map((part, i, arr) => (
-                          <React.Fragment key={`${message.id}-color-${i}`}>
-                            {part}
-                            {i < arr.length - 1 && message.colorValue && (
-                              <span style={{ color: message.colorValue.color }}>
-                                {message.colorValue.value}
-                              </span>
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {message.content.includes('Key Insights:') || message.content.includes('Significant Events:') ? (
-                          <>
-                            {(() => {
-                              const sections = {
-                                insights: message.content.includes('Key Insights:') ? 
-                                  message.content.substring(
-                                    message.content.indexOf('Key Insights:'),
-                                    message.content.includes('Significant Events:') ? 
-                                      message.content.indexOf('Significant Events:') : 
-                                      undefined
-                                  ) : '',
-                                events: message.content.includes('Significant Events:') ?
-                                  message.content.substring(message.content.indexOf('Significant Events:')) : ''
-                              };
-
-                              return (
-                                <>
-                                  {/* Render Key Insights section */}
-                                  {sections.insights && (
-                                    <div className="mb-4">
-                                      <p className="font-medium mb-2">Key Insights:</p>
-                                      {(() => {
-                                        const lines = sections.insights.split('\n').slice(1);
-                                        const isExpanded = expandedSections[message.id]?.insights;
-                                        const displayLines = isExpanded ? lines : lines.slice(0, 1);
-                                        
-                                        return (
-                                          <>
-                                            {displayLines.map((line, index) => (
-                                              <div key={`${message.id}-insight-${index}`} className="pl-4 -mt-1">
-                                                <p className="whitespace-pre-line">{line.trim()}</p>
-                                              </div>
-                                            ))}
-                                            {lines.length > 1 && (
-                                              <button
-                                                onClick={() => toggleSection(message.id, 'insights')}
-                                                className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors"
-                                              >
-                                                {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
-                                              </button>
-                                            )}
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
-                                  )}
-
-                                  {/* Render Significant Events section */}
-                                  {sections.events && (
-                                    <div>
-                                      <p className="font-medium mb-2">Significant Events:</p>
-                                      {(() => {
-                                        const lines = sections.events.split('\n').slice(1);
-                                        const isExpanded = expandedSections[message.id]?.events;
-                                        const displayLines = isExpanded ? lines : lines.slice(0, 1);
-                                        
-                                        return (
-                                          <>
-                                            {displayLines.map((line, index) => (
-                                              <div key={`${message.id}-event-${index}`} className="pl-4 -mt-1">
-                                                <p className="whitespace-pre-line">{line.trim()}</p>
-                                              </div>
-                                            ))}
-                                            {lines.length > 1 && (
-                                              <button
-                                                onClick={() => toggleSection(message.id, 'events')}
-                                                className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors"
-                                              >
-                                                {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
-                                              </button>
-                                            )}
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </>
+            {/* Content Container with Views */}
+            <div className="relative flex-1 min-h-0 overflow-hidden">
+              {/* Chat View */}
+              <motion.div
+                className="absolute inset-0 w-full h-full flex flex-col"
+                variants={viewTransitionVariants}
+                initial="chat"
+                animate={isKOLView ? "kol" : "chat"}
+              >
+                {/* Messages Container */}
+                <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 messages-container">
+                  {messages.map(message => (
+                    <div 
+                      key={message.id} 
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div 
+                        className={`max-w-[80%] rounded-2xl p-4 ${
+                          message.role === 'user' 
+                            ? 'bg-[#6C3CE9] text-white' 
+                            : 'bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white'
+                        }`}
+                      >
+                        {message.colorValue ? (
+                          <p>
+                            {message.content.split(message.colorValue.value).map((part, i, arr) => (
+                              <React.Fragment key={`${message.id}-color-${i}`}>
+                                {part}
+                                {i < arr.length - 1 && message.colorValue && (
+                                  <span style={{ color: message.colorValue.color }}>
+                                    {message.colorValue.value}
+                                  </span>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </p>
                         ) : (
-                          <p>{message.content}</p>
-                        )}
-                      </div>
-                    )}
-                    <p className="text-xs opacity-70 mt-1 text-right">
-                      {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white rounded-2xl p-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-100" />
-                      <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-200" />
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                          <div className="space-y-2">
+                            {message.content.includes('Key Insights:') || message.content.includes('Significant Events:') ? (
+                              <>
+                                {(() => {
+                                  const sections = {
+                                    insights: message.content.includes('Key Insights:') ? 
+                                      message.content.substring(
+                                        message.content.indexOf('Key Insights:'),
+                                        message.content.includes('Significant Events:') ? 
+                                          message.content.indexOf('Significant Events:') : 
+                                          undefined
+                                      ) : '',
+                                    events: message.content.includes('Significant Events:') ?
+                                      message.content.substring(message.content.indexOf('Significant Events:')) : ''
+                                  };
 
-            {/* Input Area */}
-            <div className="p-4 border-t border-[#6C3CE9]/30 shrink-0">
-              <form onSubmit={handleSubmit} className="flex space-x-3">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 bg-[#374151] text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#2EFFD4]/50"
-                  disabled={isLoading}
-                />
-                <button 
-                  type="submit"
-                  className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading || !input.trim()}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </form>
+                                  return (
+                                    <>
+                                      {/* Render Key Insights section */}
+                                      {sections.insights && (
+                                        <div className="mb-4">
+                                          <p className="font-medium mb-2">Key Insights:</p>
+                                          {(() => {
+                                            const lines = sections.insights.split('\n').slice(1);
+                                            const isExpanded = expandedSections[message.id]?.insights;
+                                            const displayLines = isExpanded ? lines : lines.slice(0, 1);
+                                            
+                                            return (
+                                              <>
+                                                {displayLines.map((line, index) => (
+                                                  <div key={`${message.id}-insight-${index}`} className="pl-4 -mt-1">
+                                                    <p className="whitespace-pre-line">{line.trim()}</p>
+                                                  </div>
+                                                ))}
+                                                {lines.length > 1 && (
+                                                  <button
+                                                    onClick={() => toggleSection(message.id, 'insights')}
+                                                    className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors"
+                                                  >
+                                                    {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
+                                                  </button>
+                                                )}
+                                              </>
+                                            );
+                                          })()}
+                                        </div>
+                                      )}
+
+                                      {/* Render Significant Events section */}
+                                      {sections.events && (
+                                        <div>
+                                          <p className="font-medium mb-2">Significant Events:</p>
+                                          {(() => {
+                                            const lines = sections.events.split('\n').slice(1);
+                                            const isExpanded = expandedSections[message.id]?.events;
+                                            const displayLines = isExpanded ? lines : lines.slice(0, 1);
+                                            
+                                            return (
+                                              <>
+                                                {displayLines.map((line, index) => (
+                                                  <div key={`${message.id}-event-${index}`} className="pl-4 -mt-1">
+                                                    <p className="whitespace-pre-line">{line.trim()}</p>
+                                                  </div>
+                                                ))}
+                                                {lines.length > 1 && (
+                                                  <button
+                                                    onClick={() => toggleSection(message.id, 'events')}
+                                                    className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors"
+                                                  >
+                                                    {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
+                                                  </button>
+                                                )}
+                                              </>
+                                            );
+                                          })()}
+                                        </div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </>
+                            ) : (
+                              <p>{message.content}</p>
+                            )}
+                          </div>
+                        )}
+                        <p className="text-xs opacity-70 mt-1 text-right">
+                          {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white rounded-2xl p-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" />
+                          <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-100" />
+                          <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-200" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Area */}
+                <div className="p-4 border-t border-[#6C3CE9]/30 shrink-0">
+                  <form onSubmit={handleSubmit} className="flex space-x-3">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Type your message..."
+                      className="flex-1 bg-[#374151] text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#2EFFD4]/50"
+                      disabled={isLoading}
+                    />
+                    <button 
+                      type="submit"
+                      className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading || !input.trim()}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </motion.div>
+
+              {/* KOL Treasury View */}
+              <motion.div
+                className="absolute inset-0 w-full h-full flex flex-col bg-[#1F2937]/80"
+                variants={kolViewVariants}
+                initial="hidden"
+                animate={isKOLView ? "visible" : "hidden"}
+              >
+                {/* KOL Treasury Header */}
+                <div className="flex items-center justify-between p-5 border-b border-[#FFD700]/30 shrink-0">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-[#FFD700] rounded-full flex items-center justify-center">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-5 w-5 text-[#1F2937]" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2}
+                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
+                        />
+                      </svg>
+                    </div>
+                    <h2 className="text-xl font-medium text-white">KOL Treasury</h2>
+                  </div>
+                  <button
+                    onClick={toggleKOLView}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* KOL Treasury Content */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <div className="text-white text-center py-8">
+                    <p className="text-lg mb-4">KOL Treasury Content</p>
+                    <p className="text-gray-400">Your collected KOL tweets will appear here</p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </>
