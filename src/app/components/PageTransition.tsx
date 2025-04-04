@@ -1,14 +1,20 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface PageTransitionProps {
-  onTransitionComplete: () => void
+  onTransitionCompleteAction: () => void
 }
 
-export const PageTransition = ({ onTransitionComplete }: PageTransitionProps) => {
+export const PageTransition = ({ onTransitionCompleteAction }: PageTransitionProps) => {
   const [animationPhase, setAnimationPhase] = useState<'extend' | 'hold' | 'retract'>('extend')
+
+  const handleTransitionComplete = useCallback(() => {
+    if (typeof onTransitionCompleteAction === 'function') {
+      onTransitionCompleteAction()
+    }
+  }, [onTransitionCompleteAction])
 
   useEffect(() => {
     if (animationPhase === 'extend') {
@@ -32,12 +38,12 @@ export const PageTransition = ({ onTransitionComplete }: PageTransitionProps) =>
     if (animationPhase === 'retract') {
       // After retraction completes (handled by AnimatePresence)
       const completeTimer = setTimeout(() => {
-        onTransitionComplete()
+        handleTransitionComplete()
       }, 800) // 500ms for retraction + 300ms buffer
 
       return () => clearTimeout(completeTimer)
     }
-  }, [animationPhase, onTransitionComplete])
+  }, [animationPhase, handleTransitionComplete])
 
   const barVariants = {
     initial: {

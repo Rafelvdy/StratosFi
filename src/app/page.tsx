@@ -281,7 +281,7 @@ export default function Home() {
   return (
     <TransitionLayout
       isTransitioning={isTransitioning}
-      onTransitionComplete={handleTransitionComplete}
+      onTransitionCompleteAction={handleTransitionComplete}
       nextPage={<ChatPage />}
     >
       {homeContent}

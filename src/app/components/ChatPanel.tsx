@@ -9,7 +9,7 @@ import { debounce } from 'lodash'
 
 interface ChatPanelProps {
   isOpen: boolean
-  onClose: () => void
+  onCloseAction: () => void
 }
 
 export interface ChatMessage {
@@ -36,7 +36,7 @@ const debugStorage = (action: string, walletAddress: string) => {
   });
 };
 
-export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
+export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   const { connected, publicKey } = useWallet()
   const messageCounterRef = useRef(1);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -132,7 +132,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
     }
 
     previousWalletRef.current = currentWallet;
-  }, [connected, publicKey]);
+  }, [connected, publicKey, messages]);
 
   // Add storage persistence check
   useEffect(() => {
@@ -191,13 +191,13 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node) && isOpen) {
-        onClose()
+        onCloseAction()
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen, onClose])
+  }, [isOpen, onCloseAction])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -379,7 +379,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            onClick={onClose}
+            onClick={onCloseAction}
           />
 
           {/* Panel */}
@@ -467,7 +467,7 @@ export const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
                   </svg>
                 </button>
                 <button 
-                  onClick={onClose}
+                  onClick={onCloseAction}
                   className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

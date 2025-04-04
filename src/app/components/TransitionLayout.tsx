@@ -7,14 +7,14 @@ interface TransitionLayoutProps {
   children: ReactNode
   nextPage: ReactNode
   isTransitioning: boolean
-  onTransitionComplete: () => void
+  onTransitionCompleteAction: () => void
 }
 
 export const TransitionLayout = ({
   children,
   nextPage,
   isTransitioning,
-  onTransitionComplete,
+  onTransitionCompleteAction,
 }: TransitionLayoutProps) => {
   const [animationPhase, setAnimationPhase] = useState<'initial' | 'extend' | 'swap' | 'retract'>('initial')
   const [showNextPage, setShowNextPage] = useState(false)
@@ -65,7 +65,7 @@ export const TransitionLayout = ({
     // Complete transition
     const completeTimer = setTimeout(() => {
       if (!isComponentMounted.current) return
-      onTransitionComplete()
+      onTransitionCompleteAction()
     }, 1400)
     timers.current.push(completeTimer)
 
@@ -73,7 +73,7 @@ export const TransitionLayout = ({
       timers.current.forEach(timer => clearTimeout(timer))
       timers.current = []
     }
-  }, [isTransitioning, onTransitionComplete])
+  }, [isTransitioning, onTransitionCompleteAction])
 
   const barVariants = {
     initial: {

@@ -45,6 +45,7 @@ export default function ChatPage() {
     
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
+    const currentPlanetRef = planetRef.current
     if (!ctx) return
 
     // Star colors with their weights
@@ -151,10 +152,10 @@ export default function ChatPage() {
 
     // Subtle planet rotation animation with memory management
     const rotatePlanet = () => {
-      if (!isComponentMounted.current || !planetRef.current) return
+      if (!isComponentMounted.current || !currentPlanetRef) return
       
       rotationAngle.current += 0.02
-      planetRef.current.style.transform = `rotate(${rotationAngle.current}deg)`
+      currentPlanetRef.style.transform = `rotate(${rotationAngle.current}deg)`
       
       if (isComponentMounted.current) {
         rotationFrameId.current = requestAnimationFrame(rotatePlanet)
@@ -184,8 +185,8 @@ export default function ChatPage() {
       particles.current = []
       rotationAngle.current = 0
       
-      if (planetRef.current) {
-        planetRef.current.style.transform = 'rotate(0deg)'
+      if (currentPlanetRef) {
+        currentPlanetRef.style.transform = 'rotate(0deg)'
       }
     }
   }, [])
@@ -341,18 +342,21 @@ export default function ChatPage() {
       </div>
 
       {/* Chat Panel */}
-      <ChatPanel 
-        isOpen={isChatPanelOpen} 
-        onClose={() => setIsChatPanelOpen(false)} 
+      <ChatPanel
+        isOpen={isChatPanelOpen}
+        onCloseAction={toggleChatPanel}
       />
 
       {/* Trading Bot Panel */}
       <TradingBotPanel 
         isOpen={isTradingBotPanelOpen} 
-        onClose={() => setIsTradingBotPanelOpen(false)} 
+        onCloseAction={() => setIsTradingBotPanelOpen(false)} 
       />
 
-      <WalletPanel isOpen={isWalletPanelOpen} onClose={() => setIsWalletPanelOpen(false)} />
+      <WalletPanel 
+        isOpen={isWalletPanelOpen} 
+        onCloseAction={() => setIsWalletPanelOpen(false)} 
+      />
     </div>
   )
 } 

@@ -8,10 +8,10 @@ import { clearChatForWallet } from '../utils/walletStorage';
 
 interface WalletPanelProps {
   isOpen: boolean;
-  onClose: () => void;
+  onCloseAction: () => void;
 }
 
-export function WalletPanel({ isOpen, onClose }: WalletPanelProps) {
+export function WalletPanel({ isOpen, onCloseAction }: WalletPanelProps) {
   const { connected, publicKey, disconnect } = useWallet();
   const [error, setError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -49,7 +49,7 @@ export function WalletPanel({ isOpen, onClose }: WalletPanelProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={onCloseAction}
           />
           <motion.div
             className="fixed right-6 top-24 bottom-6 w-96 rounded-2xl z-50 overflow-hidden"

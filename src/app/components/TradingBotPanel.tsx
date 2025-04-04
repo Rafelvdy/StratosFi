@@ -5,10 +5,10 @@ import { useState, useRef, useEffect } from 'react'
 
 interface TradingBotPanelProps {
   isOpen: boolean
-  onClose: () => void
+  onCloseAction: () => void
 }
 
-export const TradingBotPanel = ({ isOpen, onClose }: TradingBotPanelProps) => {
+export const TradingBotPanel = ({ isOpen, onCloseAction }: TradingBotPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -16,13 +16,13 @@ export const TradingBotPanel = ({ isOpen, onClose }: TradingBotPanelProps) => {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node) && isOpen) {
-        onClose()
+        onCloseAction()
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen, onClose])
+  }, [isOpen, onCloseAction])
 
   const toggleExpand = () => {
     setIsExpanded(prev => !prev)
@@ -94,7 +94,7 @@ export const TradingBotPanel = ({ isOpen, onClose }: TradingBotPanelProps) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            onClick={onClose}
+            onClick={onCloseAction}
           />
 
           {/* Panel */}
@@ -130,7 +130,7 @@ export const TradingBotPanel = ({ isOpen, onClose }: TradingBotPanelProps) => {
                 <h2 className="text-xl font-medium text-white">Trading Bot</h2>
               </div>
               <button 
-                onClick={onClose}
+                onClick={onCloseAction}
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -143,7 +143,7 @@ export const TradingBotPanel = ({ isOpen, onClose }: TradingBotPanelProps) => {
             <div className="h-[calc(100%-80px)] flex items-center justify-center p-5">
               <div className="text-center">
                 <h3 className="text-2xl font-medium text-white mb-4">Trading Bot Coming Soon</h3>
-                <p className="text-gray-300">We're working on something amazing. Stay tuned!</p>
+                <p className="text-gray-300">We&apos;re working on something amazing. Stay tuned!</p>
               </div>
             </div>
           </motion.div>
