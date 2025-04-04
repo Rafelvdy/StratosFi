@@ -1,6 +1,7 @@
 'use client'
 
 import { SolanaWalletProvider } from "./providers/WalletProvider";
+import { WalletErrorBoundary } from "../components/ErrorBoundary";
 
 export default function ClientLayout({
   children,
@@ -8,8 +9,10 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SolanaWalletProvider>
-      {children}
-    </SolanaWalletProvider>
+    <WalletErrorBoundary>
+      <SolanaWalletProvider>
+        {children}
+      </SolanaWalletProvider>
+    </WalletErrorBoundary>
   );
 } 
