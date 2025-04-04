@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    output: 'standalone',
     env: {
         DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
         TWITTER_API_KEY: process.env.TWITTER_API_KEY,
