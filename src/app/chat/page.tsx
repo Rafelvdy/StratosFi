@@ -250,7 +250,7 @@ export default function ChatPage() {
                 onClick={toggleChatPanel}
               >
                 <Image
-                  src="/icons/chat bot icon.png"
+                  src="/icons/chat-bot-icon.png"
                   alt="Chatbot"
                   width={96}
                   height={96}
@@ -273,7 +273,7 @@ export default function ChatPage() {
               >
                 <div className="flex items-center justify-center w-full h-full">
                   <Image
-                    src="/icons/trading bot icon.png"
+                    src="/icons/trading-bot-icon.png"
                     alt="Trading Bot"
                     width={96}
                     height={96}
