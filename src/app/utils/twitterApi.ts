@@ -40,7 +40,8 @@ interface TwitterApiResponse {
 
 export class TwitterApi {
     private static readonly API_KEY = process.env.TWITTER_API_KEY;
-    private static readonly BASE_URL = 'https://api.twitterapi.io/twitter/tweet/advanced_search';
+    private static readonly BASE_URL = process.env.TWITTER_API_BASE_URL;
+    private static readonly ENDPOINT = '/twitter/tweet/advanced_search';
     private static readonly EXCLUDED_PHRASES = [
         "giveaway",
         "contest",
@@ -79,6 +80,10 @@ export class TwitterApi {
     private static validateRequest(params: SearchParams): void {
         if (!this.API_KEY) {
             throw new TwitterApiError('NO_API_KEY', 'Twitter API key not configured');
+        }
+
+        if (!this.BASE_URL) {
+            throw new TwitterApiError('NO_BASE_URL', 'Twitter API base URL not configured');
         }
 
         if (!params.ticker) {
@@ -145,7 +150,7 @@ export class TwitterApi {
 
             while (hasNextPage) {
                 const query = this.constructQuery(params);
-                const url = `${this.BASE_URL}?queryType=Latest&query=${encodeURIComponent(query)}`;
+                const url = `${this.BASE_URL}${this.ENDPOINT}?queryType=Latest&query=${encodeURIComponent(query)}`;
                 const finalUrl = cursor ? `${url}&cursor=${cursor}` : url;
 
                 console.log('\n=== API Request ===');
