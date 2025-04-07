@@ -4,7 +4,7 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { saveChatToWallet, loadChatFromWallet, STORAGE_PREFIX } from '../utils/walletStorage'
+import { saveChatToWallet, loadChatFromWallet } from '../utils/walletStorage'
 import { debounce } from 'lodash'
 
 interface ChatPanelProps {
@@ -23,18 +23,6 @@ export interface ChatMessage {
   }
   isExpanded?: boolean
 }
-
-const debugStorage = (action: string, walletAddress: string) => {
-  const key = `${STORAGE_PREFIX}${walletAddress}`;
-  const data = localStorage.getItem(key);
-  console.log(`Storage Debug [${action}]:`, {
-    key,
-    hasData: !!data,
-    dataSize: data?.length,
-    allKeys: Object.keys(localStorage),
-    timestamp: new Date().toISOString()
-  });
-};
 
 export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   const { connected, publicKey } = useWallet()
@@ -73,39 +61,29 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     }));
   };
 
-  // Create debounced save function
-  const debouncedSave = useRef(
+  // Create debounced save function with useCallback
+  const debouncedSave = React.useCallback(
     debounce((walletAddress: string, msgs: ChatMessage[]) => {
+      if (!walletAddress || !msgs.length) return;
+      
       try {
         console.log('Saving chat history...', {
           walletAddress,
           messageCount: msgs.length
         });
         saveChatToWallet(walletAddress, msgs);
-        
-        // Verify save was successful
-        debugStorage('SAVE', walletAddress);
       } catch (error) {
         console.error('Failed to save chat history:', error);
       }
-    }, 1000)
-  ).current;
+    }, 1000),
+    []
+  );
 
   // Load chat history when wallet connects
   useEffect(() => {
     const currentWallet = publicKey?.toBase58() || null;
-    
-    // Debug storage state
-    if (currentWallet) {
-      debugStorage('CONNECT', currentWallet);
-    }
 
     if (connected && currentWallet) {
-      // Check storage before loading
-      const key = `${STORAGE_PREFIX}${currentWallet}`;
-      const rawData = localStorage.getItem(key);
-      console.log('Pre-load storage check:', { key, hasData: !!rawData });
-
       try {
         const savedMessages = loadChatFromWallet(currentWallet);
         if (savedMessages && savedMessages.length > 0) {
@@ -120,7 +98,6 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
       if (messages.length > 1) {
         saveChatToWallet(disconnectingWallet, messages);
       }
-      debugStorage('DISCONNECT', disconnectingWallet);
       
       // Reset UI only
       setMessages([{
@@ -132,72 +109,55 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     }
 
     previousWalletRef.current = currentWallet;
-  }, [connected, publicKey, messages]);
+  }, [connected, publicKey]); // Removed messages dependency
 
-  // Add storage persistence check
+  // Save chat history when messages change, with proper conditions
   useEffect(() => {
-    if (connected && publicKey) {
-      const walletAddress = publicKey.toBase58();
-      const key = `${STORAGE_PREFIX}${walletAddress}`;
-      const checkInterval = setInterval(() => {
-        const data = localStorage.getItem(key);
-        console.log('Storage persistence check:', {
-          key,
-          hasData: !!data,
-          timestamp: new Date().toISOString()
-        });
-      }, 5000);
+    const shouldSave = connected && 
+                      publicKey && 
+                      messages.length > 1 && 
+                      !isLoading; // Don't save while loading new messages
 
-      return () => clearInterval(checkInterval);
-    }
-  }, [connected, publicKey]);
-
-  // Save chat history when messages change
-  useEffect(() => {
-    if (connected && publicKey && messages.length > 1) {
+    if (shouldSave) {
       const walletAddress = publicKey.toBase58();
-      console.log('Saving chat history:', {
-        walletAddress,
-        messageCount: messages.length,
-        storageKey: `${STORAGE_PREFIX}${walletAddress}`
-      });
-      
       debouncedSave(walletAddress, messages);
     }
-  }, [messages, connected, publicKey, debouncedSave]);
 
-  // Cleanup on unmount
-  useEffect(() => {
     return () => {
       debouncedSave.cancel();
     };
-  }, [debouncedSave]);
+  }, [messages, connected, publicKey, debouncedSave, isLoading]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (messagesEndRef.current && !isLoading) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length, isLoading]); // Only depend on message count
 
   // Focus input when panel opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus()
-      }, 500)
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   // Handle click outside to close panel
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node) && isOpen) {
-        onCloseAction()
-      }
-    }
+    if (!isOpen) return; // Don't add listener if panel is closed
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen, onCloseAction])
+    const handleClickOutside = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        onCloseAction();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onCloseAction]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
