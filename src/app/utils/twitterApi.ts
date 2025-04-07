@@ -40,7 +40,7 @@ interface TwitterApiResponse {
 
 export class TwitterApi {
     private static readonly API_KEY = process.env.TWITTER_API_KEY;
-    private static readonly BASE_URL = process.env.TWITTER_API_BASE_URL;
+    private static readonly BASE_URL = process.env.TWITTER_API_BASE_URL?.replace(/\/+$/, '');
     private static readonly ENDPOINT = '/twitter/tweet/advanced_search';
     private static readonly EXCLUDED_PHRASES = [
         "giveaway",
@@ -158,14 +158,33 @@ export class TwitterApi {
                 console.log('DEBUG: Headers:', { 'X-API-Key': '***' });
 
                 const fetchOperation = async () => {
+                    console.log('\n=== Request Details ===');
+                    console.log('DEBUG: Full URL:', finalUrl);
+                    console.log('DEBUG: API Key:', this.API_KEY?.substring(0, 5) + '...');
+                    console.log('DEBUG: Headers being sent:', {
+                        'x-api-key': this.API_KEY?.substring(0, 5) + '...'
+                    });
+                    
                     const response = await fetch(finalUrl, {
                         headers: {
-                            'X-API-Key': this.API_KEY!
+                            'x-api-key': this.API_KEY!
                         }
                     });
 
-                    this.validateResponse(response);
-                    const data: TwitterApiResponse = await response.json();
+                    console.log('\n=== Response Details ===');
+                    console.log('DEBUG: Status:', response.status);
+                    console.log('DEBUG: Status Text:', response.statusText);
+                    const responseText = await response.text();
+                    console.log('DEBUG: Raw Response:', responseText);
+                    
+                    if (!response.ok) {
+                        throw new TwitterApiError('API_ERROR', `Twitter API error: ${response.statusText}`, {
+                            status: response.status,
+                            response: responseText
+                        });
+                    }
+
+                    const data = JSON.parse(responseText) as TwitterApiResponse;
                     
                     if (!data || !Array.isArray(data.tweets)) {
                         throw new TwitterApiError('INVALID_RESPONSE', 'Invalid response format from Twitter API');
