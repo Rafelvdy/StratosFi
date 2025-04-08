@@ -9,7 +9,7 @@ import { useMemo } from 'react'
 
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
   // Set to 'devnet' for development
-  const network = WalletAdapterNetwork.Devnet
+  const network = WalletAdapterNetwork.Mainnet
   const endpoint = useMemo(() => clusterApiUrl(network), [network])
 
   // Initialize wallet adapters
