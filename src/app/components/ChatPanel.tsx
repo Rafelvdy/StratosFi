@@ -468,9 +468,9 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay */}
+          {/* Overlay with Blur */}
           <motion.div
-            className="fixed inset-0 bg-black z-45 pointer-events-auto"
+            className="fixed inset-0 bg-black/50 backdrop-blur-md z-45 pointer-events-auto"
             variants={overlayVariants}
             initial="hidden"
             animate="visible"
@@ -481,95 +481,74 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
           {/* Panel */}
           <motion.div
             ref={panelRef}
-            className={`fixed right-0 top-0 h-screen bg-[#1F2937] border-l border-[#6C3CE9]/30 shadow-[0_0_15px_0_rgba(46,255,212,0.3)] ${isMobile ? 'w-full' : ''}`}
+            className={`fixed right-0 top-0 h-screen z-50 flex flex-col ${
+              isMobile 
+                ? 'inset-0' 
+                : 'w-[600px] rounded-l-2xl'
+            }`}
             variants={panelVariants}
             initial="hidden"
             animate={isExpanded ? "expanded" : "visible"}
             exit="exit"
           >
-            {/* Expand Arrow Button */}
-            <motion.button
-              onClick={toggleExpand}
-              className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1F2937]/80 backdrop-blur-md border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer"
-              variants={arrowVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </motion.button>
+            {/* Panel Background */}
+            <div className="absolute inset-0 bg-[#1F2937]/95 border-l border-[#6C3CE9]/30 shadow-[0_0_15px_0_rgba(46,255,212,0.3)] pointer-events-none" />
 
-            {/* KOL Treasury Button */}
-            <motion.button
-              onClick={toggleKOLView}
-              className="absolute -right-[180px] top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group cursor-pointer"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ delay: 0.2 }}
-            >
-              <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">
-                KOL Treasury
-              </span>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5 text-[#FFD700] group-hover:scale-110 transition-transform duration-300" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2}
-                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
-                />
-              </svg>
-            </motion.button>
-
-            {/* Add Reset Button */}
-            <motion.button
-              onClick={handleResetChat}
-              className="absolute -left-12 top-6 w-10 h-10 bg-[#1F2937]/80 backdrop-blur-md border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer group"
-              variants={resetButtonVariants}
-              initial="hidden"
-              animate="visible"
-              title="Reset Chat"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5 group-hover:text-[#2EFFD4] transition-colors" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-            </motion.button>
-
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-[#6C3CE9]/30 shrink-0">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-[#6C3CE9] rounded-full flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                    <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-medium text-white">Stratos AI</h2>
-              </div>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={toggleKOLView}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#1F2937]/80 backdrop-blur-md border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group cursor-pointer"
+            {/* Panel Content */}
+            <div className="relative flex flex-col h-full w-full">
+              {/* Expand Arrow Button */}
+              {!isMobile && (
+                <motion.button
+                  onClick={toggleExpand}
+                  className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1F2937] border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer z-50"
+                  variants={arrowVariants}
+                  initial="hidden"
+                  animate="visible"
                 >
-                  <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent whitespace-nowrap">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </motion.button>
+              )}
+
+              {/* Reset Button */}
+              <motion.button
+                onClick={handleResetChat}
+                className={`absolute w-10 h-10 bg-[#1F2937] border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer group z-50 ${
+                  isMobile ? 'left-4 top-4' : '-left-12 top-6'
+                }`}
+                variants={resetButtonVariants}
+                initial="hidden"
+                animate="visible"
+                title="Reset Chat"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-5 w-5 group-hover:text-[#2EFFD4] transition-colors" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </motion.button>
+
+              {/* KOL Treasury Button (Desktop) */}
+              {!isMobile && (
+                <motion.button
+                  onClick={toggleKOLView}
+                  className="absolute -right-[180px] top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 bg-[#1F2937] border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group cursor-pointer z-50"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">
                     KOL Treasury
                   </span>
                   <svg 
@@ -586,273 +565,288 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                       d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
                     />
                   </svg>
-                </button>
-                <button 
-                  onClick={onCloseAction}
-                  className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+                </motion.button>
+              )}
 
-            {/* Content Container with Views */}
-            <div className="relative flex-1 min-h-0 overflow-hidden">
-              {/* Chat View */}
-              <motion.div
-                className="absolute inset-0 w-full h-full flex flex-col"
-                variants={viewTransitionVariants}
-                initial="chat"
-                animate={isKOLView ? "kol" : "chat"}
-              >
-                {/* Messages Container */}
-                <div 
-                  ref={scrollContainerRef}
-                  className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 messages-container scroll-smooth"
-                  onScroll={handleScroll}
-                >
-                  {messages.map(message => (
-                    <div 
-                      key={message.id} 
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div 
-                        className={`max-w-[80%] rounded-2xl p-4 ${
-                          message.role === 'user' 
-                            ? 'bg-[#6C3CE9] text-white' 
-                            : 'bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white'
-                        }`}
-                      >
-                        {message.colorValue ? (
-                          <p>
-                            {message.content.split(message.colorValue.value).map((part, i, arr) => (
-                              <React.Fragment key={`${message.id}-color-${i}`}>
-                                {part}
-                                {i < arr.length - 1 && message.colorValue && (
-                                  <span style={{ color: message.colorValue.color }}>
-                                    {message.colorValue.value}
-                                  </span>
-                                )}
-                              </React.Fragment>
-                            ))}
-                          </p>
-                        ) : (
-                          <div className="space-y-2">
-                            {message.content.includes('Key Insights:') || message.content.includes('Significant Events:') ? (
-                              <>
-                                {(() => {
-                                  const sections = {
-                                    insights: message.content.includes('Key Insights:') ? 
-                                      message.content.substring(
-                                        message.content.indexOf('Key Insights:'),
-                                        message.content.includes('Significant Events:') ? 
-                                          message.content.indexOf('Significant Events:') : 
-                                          undefined
-                                      ) : '',
-                                    events: message.content.includes('Significant Events:') ?
-                                      message.content.substring(message.content.indexOf('Significant Events:')) : ''
-                                  };
-
-                                  return (
-                                    <>
-                                      {/* Render Key Insights section */}
-                                      {sections.insights && (
-                                        <div className="mb-4">
-                                          <p className="font-medium mb-2">Key Insights:</p>
-                                          {(() => {
-                                            const lines = sections.insights.split('\n').slice(1);
-                                            const isExpanded = expandedSections[message.id]?.insights;
-                                            const displayLines = isExpanded ? lines : lines.slice(0, 1);
-                                            
-                                            return (
-                                              <>
-                                                {displayLines.map((line, index) => (
-                                                  <div key={`${message.id}-insight-${index}`} className="pl-4 -mt-1">
-                                                    <p className="whitespace-pre-line">{line.trim()}</p>
-                                                  </div>
-                                                ))}
-                                                {lines.length > 1 && (
-                                                  <button
-                                                    onClick={() => toggleSection(message.id, 'insights')}
-                                                    className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors cursor-pointer"
-                                                  >
-                                                    {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
-                                                  </button>
-                                                )}
-                                              </>
-                                            );
-                                          })()}
-                                        </div>
-                                      )}
-
-                                      {/* Render Significant Events section */}
-                                      {sections.events && (
-                                        <div>
-                                          <p className="font-medium mb-2">Significant Events:</p>
-                                          {(() => {
-                                            const lines = sections.events.split('\n').slice(1);
-                                            const isExpanded = expandedSections[message.id]?.events;
-                                            const displayLines = isExpanded ? lines : lines.slice(0, 1);
-                                            
-                                            return (
-                                              <>
-                                                {displayLines.map((line, index) => (
-                                                  <div key={`${message.id}-event-${index}`} className="pl-4 -mt-1">
-                                                    <p className="whitespace-pre-line">{line.trim()}</p>
-                                                  </div>
-                                                ))}
-                                                {lines.length > 1 && (
-                                                  <button
-                                                    onClick={() => toggleSection(message.id, 'events')}
-                                                    className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors cursor-pointer"
-                                                  >
-                                                    {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
-                                                  </button>
-                                                )}
-                                              </>
-                                            );
-                                          })()}
-                                        </div>
-                                      )}
-                                    </>
-                                  );
-                                })()}
-                              </>
-                            ) : (
-                              <p>{message.content}</p>
-                            )}
-                          </div>
-                        )}
-                        <p className="text-xs opacity-70 mt-1 text-right">
-                          {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white rounded-2xl p-4">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-100" />
-                          <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-200" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} className="h-0" /> {/* Add height-0 to prevent unwanted spacing */}
-                </div>
-
-                {/* Input Area */}
-                <div className="p-4 border-t border-[#6C3CE9]/30 shrink-0">
-                  <form onSubmit={handleSubmit} className="flex space-x-3">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Type your message..."
-                      className="flex-1 bg-[#374151] text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#2EFFD4]/50"
-                      disabled={isLoading}
-                    />
-                    <button 
-                      type="submit"
-                      className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                      disabled={isLoading || !input.trim()}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </form>
-                </div>
-              </motion.div>
-
-              {/* KOL Treasury View */}
-              <motion.div
-                className="absolute inset-0 w-full h-full flex flex-col bg-[#1F2937]/80"
-                variants={kolViewVariants}
-                initial="hidden"
-                animate={isKOLView ? "visible" : "hidden"}
-              >
-                {/* KOL Treasury Header */}
-                <div className="flex items-center justify-between p-5 border-b border-[#FFD700]/30 shrink-0">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-[#FFD700] rounded-full flex items-center justify-center">
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        className="h-5 w-5 text-[#1F2937]" 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        stroke="currentColor"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2}
-                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
-                        />
-                      </svg>
-                    </div>
-                    <h2 className="text-xl font-medium text-white">KOL Treasury</h2>
+              {/* Header */}
+              <div className="flex items-center justify-between p-5 border-b border-[#6C3CE9]/30 bg-[#1F2937] shrink-0">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-[#6C3CE9] rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                      <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+                    </svg>
                   </div>
-                  <button
-                    onClick={toggleKOLView}
+                  <h2 className="text-xl font-medium text-white">Stratos AI</h2>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={onCloseAction}
                     className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 </div>
+              </div>
 
-                {/* KOL Treasury Content */}
-                <div className="flex-1 overflow-y-auto">
-                  {kolTweets.length > 0 ? (
-                    <KOLTweetList tweets={kolTweets} />
-                  ) : (
-                    <div className="text-white text-center py-8">
-                      <p className="text-lg mb-4">KOL Treasury Content</p>
-                      <p className="text-gray-400">Your collected KOL tweets will appear here</p>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Add Confirmation Dialog */}
-            <AnimatePresence>
-              {showResetConfirm && (
+              {/* Content Container with Views */}
+              <div className="relative flex-1 min-h-0 overflow-hidden bg-[#1F2937]">
+                {/* Chat View */}
                 <motion.div
-                  className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 rounded-xl"
-                  variants={confirmDialogVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
+                  className="absolute inset-0 w-full h-full flex flex-col"
+                  variants={viewTransitionVariants}
+                  initial="chat"
+                  animate={isKOLView ? "kol" : "chat"}
                 >
-                  <div className="bg-[#1F2937] border border-[#6C3CE9]/30 rounded-lg p-6 max-w-sm mx-4 shadow-lg">
-                    <h3 className="text-lg font-medium text-white mb-4">Reset Chat?</h3>
-                    <p className="text-gray-300 mb-6">This will delete all messages and cannot be undone.</p>
-                    <div className="flex justify-end space-x-4">
-                      <button
-                        onClick={() => setShowResetConfirm(false)}
-                        className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                  {/* Messages Container */}
+                  <div 
+                    ref={scrollContainerRef}
+                    className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 messages-container scroll-smooth bg-[#1F2937]"
+                    onScroll={handleScroll}
+                  >
+                    {messages.map(message => (
+                      <div 
+                        key={message.id} 
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={confirmReset}
-                        className="px-4 py-2 text-sm font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:text-red-200 rounded transition-colors"
+                        <div 
+                          className={`max-w-[80%] rounded-2xl p-4 ${
+                            message.role === 'user' 
+                              ? 'bg-[#6C3CE9] text-white' 
+                              : 'bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white'
+                          }`}
+                        >
+                          {message.colorValue ? (
+                            <p>
+                              {message.content.split(message.colorValue.value).map((part, i, arr) => (
+                                <React.Fragment key={`${message.id}-color-${i}`}>
+                                  {part}
+                                  {i < arr.length - 1 && message.colorValue && (
+                                    <span style={{ color: message.colorValue.color }}>
+                                      {message.colorValue.value}
+                                    </span>
+                                  )}
+                                </React.Fragment>
+                              ))}
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {message.content.includes('Key Insights:') || message.content.includes('Significant Events:') ? (
+                                <>
+                                  {(() => {
+                                    const sections = {
+                                      insights: message.content.includes('Key Insights:') ? 
+                                        message.content.substring(
+                                          message.content.indexOf('Key Insights:'),
+                                          message.content.includes('Significant Events:') ? 
+                                            message.content.indexOf('Significant Events:') : 
+                                            undefined
+                                        ) : '',
+                                      events: message.content.includes('Significant Events:') ?
+                                        message.content.substring(message.content.indexOf('Significant Events:')) : ''
+                                    };
+
+                                    return (
+                                      <>
+                                        {/* Render Key Insights section */}
+                                        {sections.insights && (
+                                          <div className="mb-4">
+                                            <p className="font-medium mb-2">Key Insights:</p>
+                                            {(() => {
+                                              const lines = sections.insights.split('\n').slice(1);
+                                              const isExpanded = expandedSections[message.id]?.insights;
+                                              const displayLines = isExpanded ? lines : lines.slice(0, 1);
+                                              
+                                              return (
+                                                <>
+                                                  {displayLines.map((line, index) => (
+                                                    <div key={`${message.id}-insight-${index}`} className="pl-4 -mt-1">
+                                                      <p className="whitespace-pre-line">{line.trim()}</p>
+                                                    </div>
+                                                  ))}
+                                                  {lines.length > 1 && (
+                                                    <button
+                                                      onClick={() => toggleSection(message.id, 'insights')}
+                                                      className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors cursor-pointer"
+                                                    >
+                                                      {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
+                                                    </button>
+                                                  )}
+                                                </>
+                                              );
+                                            })()}
+                                          </div>
+                                        )}
+
+                                        {/* Render Significant Events section */}
+                                        {sections.events && (
+                                          <div>
+                                            <p className="font-medium mb-2">Significant Events:</p>
+                                            {(() => {
+                                              const lines = sections.events.split('\n').slice(1);
+                                              const isExpanded = expandedSections[message.id]?.events;
+                                              const displayLines = isExpanded ? lines : lines.slice(0, 1);
+                                              
+                                              return (
+                                                <>
+                                                  {displayLines.map((line, index) => (
+                                                    <div key={`${message.id}-event-${index}`} className="pl-4 -mt-1">
+                                                      <p className="whitespace-pre-line">{line.trim()}</p>
+                                                    </div>
+                                                  ))}
+                                                  {lines.length > 1 && (
+                                                    <button
+                                                      onClick={() => toggleSection(message.id, 'events')}
+                                                      className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors cursor-pointer"
+                                                    >
+                                                      {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
+                                                    </button>
+                                                  )}
+                                                </>
+                                              );
+                                            })()}
+                                          </div>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                </>
+                              ) : (
+                                <p>{message.content}</p>
+                              )}
+                            </div>
+                          )}
+                          <p className="text-xs opacity-70 mt-1 text-right">
+                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {isLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white rounded-2xl p-4">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" />
+                            <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-100" />
+                            <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-200" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} className="h-0" /> {/* Add height-0 to prevent unwanted spacing */}
+                  </div>
+
+                  {/* Input Area */}
+                  <div className="p-4 border-t border-[#6C3CE9]/30 shrink-0">
+                    <form onSubmit={handleSubmit} className="flex space-x-3">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Type your message..."
+                        className="flex-1 bg-[#374151] text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#2EFFD4]/50"
+                        disabled={isLoading}
+                      />
+                      <button 
+                        type="submit"
+                        className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        disabled={isLoading || !input.trim()}
                       >
-                        Reset
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                        </svg>
                       </button>
-                    </div>
+                    </form>
                   </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
+
+                {/* KOL Treasury View */}
+                <motion.div
+                  className="absolute inset-0 w-full h-full flex flex-col bg-[#1F2937]/80"
+                  variants={kolViewVariants}
+                  initial="hidden"
+                  animate={isKOLView ? "visible" : "hidden"}
+                >
+                  {/* KOL Treasury Header */}
+                  <div className="flex items-center justify-between p-5 border-b border-[#FFD700]/30 shrink-0">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-[#FFD700] rounded-full flex items-center justify-center">
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="h-5 w-5 text-[#1F2937]" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2}
+                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
+                          />
+                        </svg>
+                      </div>
+                      <h2 className="text-xl font-medium text-white">KOL Treasury</h2>
+                    </div>
+                    <button
+                      onClick={toggleKOLView}
+                      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* KOL Treasury Content */}
+                  <div className="flex-1 overflow-y-auto">
+                    {kolTweets.length > 0 ? (
+                      <KOLTweetList tweets={kolTweets} />
+                    ) : (
+                      <div className="text-white text-center py-8">
+                        <p className="text-lg mb-4">KOL Treasury Content</p>
+                        <p className="text-gray-400">Your collected KOL tweets will appear here</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Add Confirmation Dialog */}
+              <AnimatePresence>
+                {showResetConfirm && (
+                  <motion.div
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 rounded-xl"
+                    variants={confirmDialogVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                  >
+                    <div className="bg-[#1F2937] border border-[#6C3CE9]/30 rounded-lg p-6 max-w-sm mx-4 shadow-lg">
+                      <h3 className="text-lg font-medium text-white mb-4">Reset Chat?</h3>
+                      <p className="text-gray-300 mb-6">This will delete all messages and cannot be undone.</p>
+                      <div className="flex justify-end space-x-4">
+                        <button
+                          onClick={() => setShowResetConfirm(false)}
+                          className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={confirmReset}
+                          className="px-4 py-2 text-sm font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:text-red-200 rounded transition-colors"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         </>
       )}
