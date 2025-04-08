@@ -179,12 +179,12 @@ export default function Home() {
       {/* Space section with particles */}
       <section className="relative h-screen">
         {/* Logo with adjusted z-index to ensure it's above particles */}
-        <div className="absolute top-63 left-168 z-50">
+        <div className="absolute top-[31%] left-[44.5%] z-50">
           <Image
             src="/logos/Stratos Bar logo (white).png"
             alt="Stratos Logo"
-            width={240}
-            height={130}
+            width={260}
+            height={150}
             priority
             className="select-none"
           />
