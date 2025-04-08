@@ -46,6 +46,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
   const [isNearBottom, setIsNearBottom] = useState(true)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   interface ExpandedState {
     insights: boolean;
@@ -288,6 +289,31 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     setIsKOLView(prev => !prev)
   }
 
+  const handleResetChat = () => {
+    setShowResetConfirm(true)
+  }
+
+  const confirmReset = () => {
+    // Reset to initial welcome message
+    setMessages([{
+      id: 'welcome-0',
+      role: 'assistant',
+      content: 'Hello! I am Stratos AI, your personal sentiment analysis assistant. How can I help you today?',
+      timestamp: new Date()
+    }])
+    
+    // Clear wallet storage if connected
+    if (connected && publicKey) {
+      saveChatToWallet(publicKey.toBase58(), [])
+    }
+    
+    // Reset other states
+    setExpandedSections({})
+    setShowResetConfirm(false)
+    setShouldAutoScroll(true)
+    setIsNearBottom(true)
+  }
+
   const panelVariants = {
     hidden: { x: '100%', opacity: 0 },
     visible: { 
@@ -380,6 +406,33 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     }
   }
 
+  const resetButtonVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: { 
+        delay: 0.4,
+        type: 'spring',
+        stiffness: 300,
+        damping: 25
+      }
+    }
+  }
+
+  const confirmDialogVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30
+      }
+    }
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -440,6 +493,31 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                   strokeLinejoin="round" 
                   strokeWidth={2}
                   d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
+                />
+              </svg>
+            </motion.button>
+
+            {/* Add Reset Button */}
+            <motion.button
+              onClick={handleResetChat}
+              className="absolute -left-12 top-[calc(50%+4rem)] -translate-y-1/2 w-10 h-10 bg-[#1F2937]/80 backdrop-blur-md border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer group"
+              variants={resetButtonVariants}
+              initial="hidden"
+              animate="visible"
+              title="Reset Chat"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5 group-hover:text-[#2EFFD4] transition-colors" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
             </motion.button>
@@ -708,6 +786,38 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                 </div>
               </motion.div>
             </div>
+
+            {/* Add Confirmation Dialog */}
+            <AnimatePresence>
+              {showResetConfirm && (
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 rounded-xl"
+                  variants={confirmDialogVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
+                >
+                  <div className="bg-[#1F2937] border border-[#6C3CE9]/30 rounded-lg p-6 max-w-sm mx-4 shadow-lg">
+                    <h3 className="text-lg font-medium text-white mb-4">Reset Chat?</h3>
+                    <p className="text-gray-300 mb-6">This will delete all messages and cannot be undone.</p>
+                    <div className="flex justify-end space-x-4">
+                      <button
+                        onClick={() => setShowResetConfirm(false)}
+                        className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmReset}
+                        className="px-4 py-2 text-sm font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:text-red-200 rounded transition-colors"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </>
       )}
