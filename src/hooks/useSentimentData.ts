@@ -3,7 +3,7 @@ import { TwitterApi } from '../app/utils/twitterApi';
 import { Tweet } from '../app/utils/twitterAnalyzer';
 import { analyzeTweets } from '../app/utils/nlpAnalyzer';
 
-interface SentimentData {
+export interface SentimentData {
   ticker: string;
   sentiment: number;
   tweets: Tweet[];

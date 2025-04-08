@@ -6,6 +6,10 @@ import { useState, useRef, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { saveChatToWallet, loadChatFromWallet } from '../utils/walletStorage'
 import { debounce } from 'lodash'
+import { KOLTweetList } from './KOLTweetList'
+import { KOLTweet, Tweet } from '../utils/twitterApi'
+import { SentimentData } from '../../hooks/useSentimentData'
+import { useSentimentData } from '../../hooks/useSentimentData'
 
 interface ChatPanelProps {
   isOpen: boolean
@@ -47,6 +51,12 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
   const [isNearBottom, setIsNearBottom] = useState(true)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [kolTweets, setKolTweets] = useState<KOLTweet[]>([])
+  const [currentTicker, setCurrentTicker] = useState<string>('')
+  const { data: sentimentData } = useSentimentData({ 
+    ticker: currentTicker,
+    timeframe: '24h'
+  });
 
   interface ExpandedState {
     insights: boolean;
@@ -229,6 +239,12 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     setIsLoading(true)
 
     try {
+      // Extract ticker from user message
+      const tickerMatch = input.match(/\b(BTC|ETH|SOL|DOGE|XRP|ADA)\b/i);
+      if (tickerMatch) {
+        setCurrentTicker(tickerMatch[0].toUpperCase());
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -313,6 +329,16 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     setShouldAutoScroll(true)
     setIsNearBottom(true)
   }
+
+  // Update kolTweets when sentiment data changes
+  useEffect(() => {
+    if (sentimentData?.tweets) {
+      const kolTweetsFromData = sentimentData.tweets.filter((tweet: Tweet): tweet is KOLTweet => 
+        'influence_score' in tweet && 'time_factor' in tweet
+      );
+      setKolTweets(kolTweetsFromData);
+    }
+  }, [sentimentData]);
 
   const panelVariants = {
     hidden: { x: '100%', opacity: 0 },
@@ -778,11 +804,15 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                 </div>
 
                 {/* KOL Treasury Content */}
-                <div className="flex-1 overflow-y-auto p-4">
-                  <div className="text-white text-center py-8">
-                    <p className="text-lg mb-4">KOL Treasury Content</p>
-                    <p className="text-gray-400">Your collected KOL tweets will appear here</p>
-                  </div>
+                <div className="flex-1 overflow-y-auto">
+                  {kolTweets.length > 0 ? (
+                    <KOLTweetList tweets={kolTweets} />
+                  ) : (
+                    <div className="text-white text-center py-8">
+                      <p className="text-lg mb-4">KOL Treasury Content</p>
+                      <p className="text-gray-400">Your collected KOL tweets will appear here</p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </div>

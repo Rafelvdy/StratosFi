@@ -11,7 +11,7 @@ class TwitterApiError extends Error {
     }
 }
 
-interface KOLTweet extends Tweet {
+export interface KOLTweet extends Tweet {
     influence_score: number;
     time_factor: number;
 }
@@ -32,10 +32,27 @@ interface TwitterApiResponse {
         user: {
             screen_name: string;
             followers_count: number;
+            profile_image_url: string;
         };
     }>;
     has_next_page: boolean;
     next_cursor: string;
+}
+
+export interface Tweet {
+    id: string;
+    text: string;
+    created_at: string;
+    metrics: {
+        likes: number;
+        retweets: number;
+        replies: number;
+    };
+    author: {
+        username: string;
+        followers_count: number;
+        profile_image_url: string;
+    };
 }
 
 export class TwitterApi {
@@ -357,7 +374,8 @@ export class TwitterApi {
             },
             author: {
                 username: tweet.user?.screen_name || 'unknown',
-                followers_count: tweet.user?.followers_count || 0
+                followers_count: tweet.user?.followers_count || 0,
+                profile_image_url: tweet.user?.profile_image_url || ''
             }
         }));
 

@@ -28,6 +28,7 @@ export interface Tweet {
     author: {
         username: string;
         followers_count: number;
+        profile_image_url: string;
     };
 }
 
