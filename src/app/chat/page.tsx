@@ -6,6 +6,8 @@ import { ChatPanel } from '../components/ChatPanel'
 import { TradingBotPanel } from '../components/TradingBotPanel'
 import { WalletPanel } from '../components/WalletPanel'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { useWindowSize } from '../../hooks/useWindowSize'
+import { motion } from 'framer-motion'
 
 interface Particle {
   x: number
@@ -30,6 +32,7 @@ export default function ChatPage() {
   const [isTradingBotPanelOpen, setIsTradingBotPanelOpen] = useState(false)
   const [isWalletPanelOpen, setIsWalletPanelOpen] = useState(false)
   const { connected, publicKey } = useWallet()
+  const { isMobile } = useWindowSize()
 
   // Reset state when component mounts
   useEffect(() => {
@@ -196,7 +199,7 @@ export default function ChatPage() {
   const toggleWalletPanel = () => setIsWalletPanelOpen(!isWalletPanelOpen)
 
   return (
-    <div className="relative min-h-screen bg-[#0A0A0A] text-white">
+    <div className="relative w-full h-screen overflow-hidden">
       {/* Star Field Base Layer */}
       <canvas
         ref={canvasRef}
@@ -232,114 +235,120 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Floating Navigation Panel */}
-      <div 
-        className="fixed left-6 top-6 h-[calc(100vh-48px)] w-[280px] bg-[#1F2937] rounded-xl shadow-[0_0_15px_0_rgba(46,255,212,0.3)] relative"
-        style={{ zIndex: 40 }}
-      >
-        <div className="p-8">
-          <h2 className="text-2xl font-semibold text-white mb-8">Navigation</h2>
-          <nav className="flex flex-col items-center space-y-6">
-            <div className="relative group">
-              <button 
-                className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 cursor-pointer ${
-                  isChatPanelOpen 
-                    ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
-                    : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
-                }`}
-                onClick={toggleChatPanel}
-              >
-                <Image
-                  src="/Icons/chat-bot-icon.png"
-                  alt="Chatbot"
-                  width={96}
-                  height={96}
-                  className="transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute -right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 -translate-x-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-full whitespace-nowrap text-sm font-medium backdrop-blur-sm border border-[#6C3CE9]/30">
-                  Chatbot
-                </div>
-              </button>
-            </div>
-            
-            <div className="relative group">
-              <button 
-                className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 cursor-pointer ${
-                  isTradingBotPanelOpen 
-                    ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
-                    : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
-                }`}
-                onClick={toggleTradingBotPanel}
-              >
-                <div className="flex items-center justify-center w-full h-full">
+      {/* Navigation Panel - Only show on desktop or when chat is closed on mobile */}
+      {(!isMobile || (isMobile && !isChatPanelOpen)) && (
+        <motion.div 
+          className="fixed left-6 top-6 h-[calc(100vh-48px)] w-[280px] bg-[#1F2937] rounded-xl shadow-[0_0_15px_0_rgba(46,255,212,0.3)] relative"
+          style={{ zIndex: 40 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="p-8">
+            <h2 className="text-2xl font-semibold text-white mb-8">Navigation</h2>
+            <nav className="flex flex-col items-center space-y-6">
+              <div className="relative group">
+                <button 
+                  className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 cursor-pointer ${
+                    isChatPanelOpen 
+                      ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
+                      : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
+                  }`}
+                  onClick={toggleChatPanel}
+                >
                   <Image
-                    src="/Icons/trading-bot-icon.png"
-                    alt="Trading Bot"
+                    src="/Icons/chat-bot-icon.png"
+                    alt="Chatbot"
                     width={96}
                     height={96}
-                    className="transition-transform duration-300 group-hover:scale-110 mr-5"
+                    className="transition-transform duration-300 group-hover:scale-110"
                   />
+                  <div className="absolute -right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 -translate-x-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-full whitespace-nowrap text-sm font-medium backdrop-blur-sm border border-[#6C3CE9]/30">
+                    Chatbot
+                  </div>
+                </button>
+              </div>
+              
+              <div className="relative group">
+                <button 
+                  className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 cursor-pointer ${
+                    isTradingBotPanelOpen 
+                      ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
+                      : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
+                  }`}
+                  onClick={toggleTradingBotPanel}
+                >
+                  <div className="flex items-center justify-center w-full h-full">
+                    <Image
+                      src="/Icons/trading-bot-icon.png"
+                      alt="Trading Bot"
+                      width={96}
+                      height={96}
+                      className="transition-transform duration-300 group-hover:scale-110 mr-5"
+                    />
+                  </div>
+                  <div className="absolute -right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 -translate-x-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-full whitespace-nowrap text-sm font-medium backdrop-blur-sm border border-[#6C3CE9]/30">
+                    Trading Bot
+                  </div>
+                </button>
+              </div>
+            </nav>
+          </div>
+
+          {/* Wallet Connection Button */}
+          <div className="absolute bottom-6 left-6 right-6">
+            <div className="relative group">
+              <button
+                onClick={toggleWalletPanel}
+                className={`w-full flex items-center justify-center gap-4 px-6 py-3 bg-[#1A1A1A] hover:bg-[#2A2A2A] rounded-xl border border-[#2A2A2A] transition-all duration-200 group relative ${
+                  isWalletPanelOpen ? 'bg-[#2A2A2A]' : ''
+                }`}
+              >
+                <div className="w-10 h-10 rounded-full bg-[#6C3CE9]/10 flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-[#2EFFD4]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M21 7V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V7C3 4 4.5 2 8 2H16C19.5 2 21 4 21 7Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M15.5 2V9.85999C15.5 10.3 14.98 10.52 14.66 10.23L12.34 8.09003C12.15 7.91003 11.85 7.91003 11.66 8.09003L9.34003 10.23C9.02003 10.52 8.5 10.3 8.5 9.85999V2H15.5Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </div>
-                <div className="absolute -right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 -translate-x-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-full whitespace-nowrap text-sm font-medium backdrop-blur-sm border border-[#6C3CE9]/30">
-                  Trading Bot
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-medium">
+                    {connected
+                      ? `${publicKey?.toBase58().slice(0, 4)}...${publicKey?.toBase58().slice(-4)}`
+                      : 'Connect Wallet'}
+                  </span>
+                  <div
+                    className="absolute top-0 -translate-y-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                    style={{ marginTop: '-8px' }}
+                  >
+                    <div className="bg-[#2A2A2A] px-3 py-1 rounded-lg text-sm whitespace-nowrap flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${connected ? 'bg-[#2EFFD4]' : 'bg-red-500'}`} />
+                      {connected ? 'Connected' : 'Disconnected'}
+                    </div>
+                  </div>
                 </div>
               </button>
             </div>
-          </nav>
-        </div>
-
-        {/* Wallet Connection Button */}
-        <div className="absolute bottom-6 left-6 right-6">
-          <div className="relative group">
-            <button
-              onClick={toggleWalletPanel}
-              className={`w-full flex items-center justify-center gap-4 px-6 py-3 bg-[#1A1A1A] hover:bg-[#2A2A2A] rounded-xl border border-[#2A2A2A] transition-all duration-200 group relative ${
-                isWalletPanelOpen ? 'bg-[#2A2A2A]' : ''
-              }`}
-            >
-              <div className="w-10 h-10 rounded-full bg-[#6C3CE9]/10 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-[#2EFFD4]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M21 7V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V7C3 4 4.5 2 8 2H16C19.5 2 21 4 21 7Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M15.5 2V9.85999C15.5 10.3 14.98 10.52 14.66 10.23L12.34 8.09003C12.15 7.91003 11.85 7.91003 11.66 8.09003L9.34003 10.23C9.02003 10.52 8.5 10.3 8.5 9.85999V2H15.5Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm font-medium">
-                  {connected
-                    ? `${publicKey?.toBase58().slice(0, 4)}...${publicKey?.toBase58().slice(-4)}`
-                    : 'Connect Wallet'}
-                </span>
-                <div
-                  className="absolute top-0 -translate-y-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-                  style={{ marginTop: '-8px' }}
-                >
-                  <div className="bg-[#2A2A2A] px-3 py-1 rounded-lg text-sm whitespace-nowrap flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${connected ? 'bg-[#2EFFD4]' : 'bg-red-500'}`} />
-                    {connected ? 'Connected' : 'Disconnected'}
-                  </div>
-                </div>
-              </div>
-            </button>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      )}
 
       {/* Chat Panel */}
       <ChatPanel

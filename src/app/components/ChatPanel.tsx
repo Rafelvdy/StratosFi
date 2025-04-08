@@ -10,6 +10,7 @@ import { KOLTweetList } from './KOLTweetList'
 import { KOLTweet, Tweet } from '../utils/twitterApi'
 import { SentimentData } from '../../hooks/useSentimentData'
 import { useSentimentData } from '../../hooks/useSentimentData'
+import { useWindowSize } from '../../hooks/useWindowSize'
 
 interface ChatPanelProps {
   isOpen: boolean
@@ -57,6 +58,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     ticker: currentTicker,
     timeframe: '24h'
   });
+  const { isMobile } = useWindowSize();
 
   interface ExpandedState {
     insights: boolean;
@@ -341,11 +343,14 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   }, [sentimentData]);
 
   const panelVariants = {
-    hidden: { x: '100%', opacity: 0 },
+    hidden: { 
+      x: isMobile ? '100%' : '100%', 
+      opacity: 0 
+    },
     visible: { 
       x: '0%', 
       opacity: 1,
-      width: '400px',
+      width: isMobile ? '100%' : '400px',
       transition: { 
         type: 'spring',
         stiffness: 300,
@@ -356,7 +361,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     expanded: {
       x: '0%',
       opacity: 1,
-      width: 'calc(100vw - 385px)', // 304px (nav width + gap) + 24px right margin + 24px gap between panels
+      width: isMobile ? '100%' : 'calc(100vw - 385px)',
       transition: {
         type: 'spring',
         stiffness: 300,
@@ -365,7 +370,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
       }
     },
     exit: { 
-      x: '100%', 
+      x: isMobile ? '100%' : '100%', 
       opacity: 0,
       transition: { 
         duration: 0.3,
@@ -476,7 +481,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
           {/* Panel */}
           <motion.div
             ref={panelRef}
-            className="fixed top-6 bottom-6 right-6 bg-[#1F2937]/80 backdrop-blur-md border border-[#6C3CE9]/30 rounded-xl z-50 shadow-[0_0_15px_0_rgba(46,255,212,0.2)] flex flex-col"
+            className={`fixed right-0 top-0 h-screen bg-[#1F2937] border-l border-[#6C3CE9]/30 shadow-[0_0_15px_0_rgba(46,255,212,0.3)] ${isMobile ? 'w-full' : ''}`}
             variants={panelVariants}
             initial="hidden"
             animate={isExpanded ? "expanded" : "visible"}
