@@ -43,9 +43,31 @@ export interface TweetCategories {
 
 // Core function
 export function extractSearchParams(message: string): SearchParams {
-    // Extract ticker
-    const ticker = message.match(/\b(BTC|ETH|SOL|DOGE|XRP|ADA)\b/i)?.[0] || '';
+    // Extract ticker with expanded pattern to include full names and variations
+    const tickerPattern = /\b(BTC|ETH|SOL|DOGE|XRP|ADA|bitcoin|ethereum|solana|dogecoin|ripple|cardano)\b/i;
+    const prefixPattern = /[$#](btc|eth|sol|doge|xrp|ada)\b/i;
     
+    // Try to match standard tickers or full names
+    let ticker = message.match(tickerPattern)?.[0] || '';
+    
+    // If no match, try prefix pattern
+    if (!ticker) {
+        ticker = message.match(prefixPattern)?.[0] || '';
+    }
+    
+    // Convert to uppercase ticker if it's a full name
+    if (ticker.toLowerCase() === 'bitcoin') ticker = 'BTC';
+    else if (ticker.toLowerCase() === 'ethereum') ticker = 'ETH';
+    else if (ticker.toLowerCase() === 'solana') ticker = 'SOL';
+    else if (ticker.toLowerCase() === 'dogecoin') ticker = 'DOGE';
+    else if (ticker.toLowerCase() === 'ripple') ticker = 'XRP';
+    else if (ticker.toLowerCase() === 'cardano') ticker = 'ADA';
+    else if (ticker.startsWith('$') || ticker.startsWith('#')) {
+        ticker = ticker.substring(1).toUpperCase();
+    } else {
+        ticker = ticker.toUpperCase();
+    }
+
     // Update timeframe extraction to handle natural language
     let timeframe = '24h'; // default
     

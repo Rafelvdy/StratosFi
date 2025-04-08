@@ -58,13 +58,47 @@ export class TwitterApi {
     ];
 
     private static readonly TICKER_MAPPING: { [key: string]: string } = {
+        // Bitcoin variations
         'bitcoin': 'BTC',
+        'btc': 'BTC',
+        'Bitcoin': 'BTC',
+        '$btc': 'BTC',
+        '#btc': 'BTC',
+        
+        // Ethereum variations
         'ethereum': 'ETH',
+        'eth': 'ETH',
+        'Ethereum': 'ETH',
+        '$eth': 'ETH',
+        '#eth': 'ETH',
+        
+        // Solana variations
         'solana': 'SOL',
+        'sol': 'SOL',
+        'Solana': 'SOL',
+        '$sol': 'SOL',
+        '#sol': 'SOL',
+        
+        // Dogecoin variations
+        'dogecoin': 'DOGE',
+        'doge': 'DOGE',
+        'Dogecoin': 'DOGE',
+        '$doge': 'DOGE',
+        '#doge': 'DOGE',
+        
+        // XRP variations
+        'ripple': 'XRP',
+        'xrp': 'XRP',
+        'Ripple': 'XRP',
+        '$xrp': 'XRP',
+        '#xrp': 'XRP',
+        
+        // Cardano variations
         'cardano': 'ADA',
-        'polkadot': 'DOT',
-        'avalanche': 'AVAX',
-        'cosmos': 'ATOM'
+        'ada': 'ADA',
+        'Cardano': 'ADA',
+        '$ada': 'ADA',
+        '#ada': 'ADA'
     };
 
     private static readonly KOL_THRESHOLDS = {
