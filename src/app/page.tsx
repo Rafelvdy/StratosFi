@@ -179,7 +179,7 @@ export default function Home() {
       {/* Space section with particles */}
       <section className="relative h-screen">
         {/* Logo with adjusted z-index to ensure it's above particles */}
-        <div className="absolute top-[31%] left-[44.5%] z-50">
+        <div className="absolute top-[31%] left-[47%] z-50">
           <Image
             src="/logos/Stratos Bar logo (white).png"
             alt="Stratos Logo"
@@ -200,7 +200,7 @@ export default function Home() {
               Welcome to 
             </h1>
             <p className="text-xl mb-8 text-gray-200">
-              Harness the power of AI to analyze market sentiment and automate your trading strategy
+              Harness the power of AI to analyze market sentiment and Rise above Market Noise!
             </p>
             <div className="space-x-4">
               <button 
@@ -228,18 +228,14 @@ export default function Home() {
             <h2 className="text-4xl font-bold mb-16 text-center text-white">
               Powerful Features
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 gap-16">
               {[
                 {
                   title: 'Sentiment Analysis',
                   description: 'Real-time analysis of market sentiment from news and social media',
                   icon: '📊'
                 },
-                {
-                  title: 'Automated Trading',
-                  description: 'Set up sophisticated trading bots with custom strategies',
-                  icon: '🤖'
-                },
+                
                 {
                   title: 'Market Insights',
                   description: 'Deep dive into market trends with AI-powered analytics',
@@ -263,7 +259,7 @@ export default function Home() {
             <div className="backdrop-blur-sm bg-[#2EFFD4]/10 rounded-3xl p-12 text-center border border-[#2EFFD4]/30">
               <h2 className="text-4xl font-bold mb-4 text-white">Ready to Start Trading Smarter?</h2>
               <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-200">
-                Join thousands of traders using AI-powered sentiment analysis to make better trading decisions
+                Start using Intelligence to Rise above Market Noise!
               </p>
               <button 
                 onClick={handleLaunchApp}

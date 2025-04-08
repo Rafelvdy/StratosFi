@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ChatPanel } from '../components/ChatPanel'
-import { TradingBotPanel } from '../components/TradingBotPanel'
 import { WalletPanel } from '../components/WalletPanel'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWindowSize } from '../../hooks/useWindowSize'
@@ -29,7 +28,6 @@ export default function ChatPage() {
   const particles = useRef<Particle[]>([])
   const rotationAngle = useRef(0)
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false)
-  const [isTradingBotPanelOpen, setIsTradingBotPanelOpen] = useState(false)
   const [isWalletPanelOpen, setIsWalletPanelOpen] = useState(false)
   const { connected, publicKey } = useWallet()
   const { isMobile } = useWindowSize()
@@ -195,7 +193,6 @@ export default function ChatPage() {
   }, [])
 
   const toggleChatPanel = () => setIsChatPanelOpen(!isChatPanelOpen)
-  const toggleTradingBotPanel = () => setIsTradingBotPanelOpen(!isTradingBotPanelOpen)
   const toggleWalletPanel = () => setIsWalletPanelOpen(!isWalletPanelOpen)
 
   return (
@@ -247,7 +244,7 @@ export default function ChatPage() {
         >
           <div className="p-8">
             <h2 className="text-2xl font-semibold text-white mb-8">Navigation</h2>
-            <nav className="flex flex-col items-center space-y-6">
+            <nav className="flex flex-col items-center">
               <div className="relative group">
                 <button 
                   className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 cursor-pointer ${
@@ -266,30 +263,6 @@ export default function ChatPage() {
                   />
                   <div className="absolute -right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 -translate-x-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-full whitespace-nowrap text-sm font-medium backdrop-blur-sm border border-[#6C3CE9]/30">
                     Chatbot
-                  </div>
-                </button>
-              </div>
-              
-              <div className="relative group">
-                <button 
-                  className={`w-48 h-48 flex items-center justify-center rounded-xl text-white transition-all duration-300 hover:scale-105 cursor-pointer ${
-                    isTradingBotPanelOpen 
-                      ? 'bg-gradient-to-br from-[#2EFFD4]/30 to-[#6C3CE9]/50 hover:from-[#2EFFD4]/40 hover:to-[#6C3CE9]/60 shadow-[0_0_20px_0_rgba(46,255,212,0.3)]' 
-                      : 'bg-gradient-to-br from-[#2EFFD4]/10 to-[#6C3CE9]/20 hover:from-[#2EFFD4]/20 hover:to-[#6C3CE9]/30 hover:shadow-[0_0_20px_0_rgba(46,255,212,0.2)]'
-                  }`}
-                  onClick={toggleTradingBotPanel}
-                >
-                  <div className="flex items-center justify-center w-full h-full">
-                    <Image
-                      src="/Icons/trading-bot-icon.png"
-                      alt="Trading Bot"
-                      width={96}
-                      height={96}
-                      className="transition-transform duration-300 group-hover:scale-110 mr-5"
-                    />
-                  </div>
-                  <div className="absolute -right-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-[#1F2937]/90 rounded-lg opacity-0 -translate-x-2 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-full whitespace-nowrap text-sm font-medium backdrop-blur-sm border border-[#6C3CE9]/30">
-                    Trading Bot
                   </div>
                 </button>
               </div>
@@ -354,12 +327,6 @@ export default function ChatPage() {
       <ChatPanel
         isOpen={isChatPanelOpen}
         onCloseAction={toggleChatPanel}
-      />
-
-      {/* Trading Bot Panel */}
-      <TradingBotPanel 
-        isOpen={isTradingBotPanelOpen} 
-        onCloseAction={() => setIsTradingBotPanelOpen(false)} 
       />
 
       <WalletPanel 
