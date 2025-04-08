@@ -211,4 +211,6 @@ DATABASE_URL=your_database_url
 Contributions are welcome! Please read our contributing guidelines and submit pull requests for any enhancements.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
+
+See the [LICENSE](LICENSE) file for the full license text. The core requirement is that if you run a modified version of this software as a network service, you must make the source code of your modified version available to its users under the AGPLv3.
