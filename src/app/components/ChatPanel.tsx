@@ -43,6 +43,9 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const previousWalletRef = useRef<string | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+  const [isNearBottom, setIsNearBottom] = useState(true)
 
   interface ExpandedState {
     insights: boolean;
@@ -128,12 +131,61 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     };
   }, [messages, connected, publicKey, debouncedSave, isLoading]);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    if (messagesEndRef.current && !isLoading) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  // Add scroll position tracking
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current
+      const scrollBottom = scrollHeight - scrollTop - clientHeight
+      const isCloseToBottom = scrollBottom < 100 // within 100px of bottom
+      setIsNearBottom(isCloseToBottom)
+      setShouldAutoScroll(isCloseToBottom)
     }
-  }, [messages.length, isLoading]); // Only depend on message count
+  }
+
+  // Update scroll effect for new messages
+  useEffect(() => {
+    if (messagesEndRef.current && !isLoading && shouldAutoScroll) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: isNearBottom ? 'smooth' : 'auto',
+        block: 'end'
+      })
+    }
+  }, [messages.length, isLoading, shouldAutoScroll, isNearBottom])
+
+  // Add initial scroll effect when panel opens
+  useEffect(() => {
+    if (isOpen && messagesEndRef.current) {
+      // Use a small delay to ensure content is rendered
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+        setShouldAutoScroll(true)
+        setIsNearBottom(true)
+      }, 100)
+    }
+  }, [isOpen])
+
+  // Add scroll listener effect
+  useEffect(() => {
+    const scrollElement = scrollContainerRef.current
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', handleScroll)
+      return () => scrollElement.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Add resize observer for panel resizing
+  useEffect(() => {
+    if (!scrollContainerRef.current) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (shouldAutoScroll && messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
+      }
+    })
+
+    resizeObserver.observe(scrollContainerRef.current)
+    return () => resizeObserver.disconnect()
+  }, [shouldAutoScroll])
 
   // Focus input when panel opens
   useEffect(() => {
@@ -447,7 +499,11 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                 animate={isKOLView ? "kol" : "chat"}
               >
                 {/* Messages Container */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 messages-container">
+                <div 
+                  ref={scrollContainerRef}
+                  className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 messages-container scroll-smooth"
+                  onScroll={handleScroll}
+                >
                   {messages.map(message => (
                     <div 
                       key={message.id} 
@@ -577,7 +633,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                       </div>
                     </div>
                   )}
-                  <div ref={messagesEndRef} />
+                  <div ref={messagesEndRef} className="h-0" /> {/* Add height-0 to prevent unwanted spacing */}
                 </div>
 
                 {/* Input Area */}
