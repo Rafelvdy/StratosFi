@@ -119,14 +119,11 @@ export class TwitterApi {
     };
 
     private static readonly KOL_THRESHOLDS = {
-        MIN_FOLLOWERS: 10000,
-        MIN_ENGAGEMENT_RATE: 0.01,
-        MIN_RETWEETS: 10,
-        MIN_LIKES: 20
+        MIN_FOLLOWERS: 5000
     };
 
     private static readonly MAX_RETRIES = 3;
-    private static readonly RETRY_DELAY = 1000; // 1 second
+    private static readonly RETRY_DELAY = 1000;
 
     private static validateRequest(params: SearchParams): void {
         if (!this.API_KEY) {
@@ -278,75 +275,52 @@ export class TwitterApi {
             community_tweets: []
         };
 
-        const now = new Date();
-
         // DEBUG START
-        console.log('\n=== Starting Tweet Categorization ===');
-        console.log(`Total tweets to process: ${tweets.length}`);
+        console.log('\n=== Starting KOL Tweet Analysis ===');
+        console.log(`Processing ${tweets.length} total tweets`);
         // DEBUG END
 
         tweets.forEach(tweet => {
-            const {
-                metrics: { likes, retweets },
-                author: { followers_count },
-                created_at
-            } = tweet;
+            const { author: { followers_count } } = tweet;
 
-            // Calculate time-based factors
-            const tweetDate = new Date(created_at);
-            const hoursElapsed = Math.max(1, (now.getTime() - tweetDate.getTime()) / (1000 * 60 * 60));
-            
-            // Calculate time-adjusted engagement
-            const timeAdjustedEngagement = (likes + retweets) / hoursElapsed;
-            const engagementRate = timeAdjustedEngagement / followers_count;
-
-            // Check if tweet meets KOL criteria
-            const isKOL = 
-                followers_count >= this.KOL_THRESHOLDS.MIN_FOLLOWERS &&
-                engagementRate >= this.KOL_THRESHOLDS.MIN_ENGAGEMENT_RATE &&
-                retweets >= this.KOL_THRESHOLDS.MIN_RETWEETS &&
-                likes >= this.KOL_THRESHOLDS.MIN_LIKES;
+            // Check if account meets KOL criteria (only follower count)
+            const isKOL = followers_count >= this.KOL_THRESHOLDS.MIN_FOLLOWERS;
 
             if (isKOL) {
-                const followersImpact = (followers_count / this.KOL_THRESHOLDS.MIN_FOLLOWERS) * 0.4;
-                const engagementImpact = (timeAdjustedEngagement / this.KOL_THRESHOLDS.MIN_ENGAGEMENT_RATE) * 0.6;
+                // Calculate influence score based solely on follower count
+                const influence_score = Math.min(100, (followers_count / this.KOL_THRESHOLDS.MIN_FOLLOWERS) * 100);
                 
                 const kolTweet: KOLTweet = {
                     ...tweet,
-                    influence_score: Math.min(100, (followersImpact + engagementImpact) * 100),
-                    time_factor: 1 / hoursElapsed
+                    influence_score,
+                    time_factor: 1
                 };
                 categories.kol_tweets.push(kolTweet);
 
-                // DEBUG START
+                // DEBUG START - KOL Tweet Found
                 console.log('\n🌟 KOL Tweet Found:');
-                console.log(`Author: @${tweet.author.username} (${tweet.author.followers_count} followers)`);
-                console.log(`Text: ${tweet.text}`);
-                console.log(`Metrics: ${likes} likes, ${retweets} retweets`);
-                console.log(`Influence Score: ${kolTweet.influence_score.toFixed(2)}`);
-                console.log(`Time Factor: ${kolTweet.time_factor.toFixed(2)}`);
+                console.log('------------------------');
+                console.log(`Author: @${tweet.author.username}`);
+                console.log(`Followers: ${tweet.author.followers_count.toLocaleString()}`);
+                console.log(`Influence Score: ${influence_score.toFixed(2)}`);
+                console.log(`Tweet: ${tweet.text}`);
+                console.log('------------------------');
                 // DEBUG END
             } else {
                 categories.community_tweets.push(tweet);
-
-                // DEBUG START
-                console.log('\n👥 Community Tweet:');
-                console.log(`Author: @${tweet.author.username} (${tweet.author.followers_count} followers)`);
-                console.log(`Text: ${tweet.text}`);
-                console.log(`Metrics: ${likes} likes, ${retweets} retweets`);
-                // DEBUG END
             }
         });
 
         // Sort KOL tweets by influence score
         categories.kol_tweets.sort((a, b) => b.influence_score - a.influence_score);
 
-        // DEBUG START
-        console.log('\n=== Categorization Summary ===');
-        console.log(`KOL Tweets: ${categories.kol_tweets.length}`);
-        console.log(`Community Tweets: ${categories.community_tweets.length}`);
-        console.log('===============================\n');
-        // DEBUG END
+        // DEBUG Summary - Only show KOL stats
+        console.log('\n=== KOL Analysis Summary ===');
+        console.log(`Found ${categories.kol_tweets.length} KOL tweets`);
+        if (categories.kol_tweets.length > 0) {
+            console.log(`Top Influence Score: ${categories.kol_tweets[0].influence_score.toFixed(2)}`);
+        }
+        console.log('===========================\n');
 
         return categories;
     }
@@ -417,8 +391,8 @@ export class TwitterApi {
             `$${ticker.toLowerCase()}`
         ].join(' OR ');
         
-        // Add language filter, quality filters, bot filtering, and exclude replies
-        const query = `(${searchVariations}) ${exclusionFilters} ${usernameExclusions} lang:en -has:links min_faves:2 -is:bot -is:nullcast -is:reply since:${timestamp}`;
+        // Add language filter and quality filters (removed -has:links)
+        const query = `(${searchVariations}) ${exclusionFilters} ${usernameExclusions} lang:en min_faves:2 -is:bot -is:nullcast since:${timestamp}`;
         
         // DEBUG START
         console.log('\n=== Query Construction ===');

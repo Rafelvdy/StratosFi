@@ -30,6 +30,7 @@ export interface ChatMessage {
 }
 
 export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
+  const PANEL_HEIGHT = 'calc(100vh - 48px)';
   const { connected, publicKey } = useWallet()
   const messageCounterRef = useRef(1);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -335,9 +336,27 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   // Update kolTweets when sentiment data changes
   useEffect(() => {
     if (sentimentData?.tweets) {
-      const kolTweetsFromData = sentimentData.tweets.filter((tweet: Tweet): tweet is KOLTweet => 
-        'influence_score' in tweet && 'time_factor' in tweet
-      );
+      const MIN_FOLLOWERS = 5000;
+      
+      // Filter tweets where author has 5000+ followers, sort by follower count
+      const kolTweetsFromData = sentimentData.tweets
+        .filter(tweet => tweet.author.followers_count >= MIN_FOLLOWERS)
+        .sort((a, b) => b.author.followers_count - a.author.followers_count)
+        .map(tweet => ({
+          ...tweet,
+          influence_score: Math.min(100, (tweet.author.followers_count / MIN_FOLLOWERS) * 100),
+          time_factor: 1
+        }));
+
+      // Debug logging
+      console.log(`Found ${kolTweetsFromData.length} KOL tweets (accounts with ${MIN_FOLLOWERS}+ followers)`);
+      if (kolTweetsFromData.length > 0) {
+        console.log('Top KOLs by follower count:');
+        kolTweetsFromData.slice(0, 3).forEach(tweet => {
+          console.log(`@${tweet.author.username}: ${tweet.author.followers_count.toLocaleString()} followers`);
+        });
+      }
+      
       setKolTweets(kolTweetsFromData);
     }
   }, [sentimentData]);
@@ -351,6 +370,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
       x: '0%', 
       opacity: 1,
       width: isMobile ? '100%' : '400px',
+      height: isMobile ? '100%' : PANEL_HEIGHT,
       transition: { 
         type: 'spring',
         stiffness: 300,
@@ -362,6 +382,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
       x: '0%',
       opacity: 1,
       width: isMobile ? '100%' : 'calc(100vw - 385px)',
+      height: isMobile ? '100%' : PANEL_HEIGHT,
       transition: {
         type: 'spring',
         stiffness: 300,
@@ -481,10 +502,10 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
           {/* Panel */}
           <motion.div
             ref={panelRef}
-            className={`fixed right-0 top-0 h-screen z-50 flex flex-col ${
+            className={`fixed right-6 top-6 z-50 flex flex-col ${
               isMobile 
                 ? 'inset-0' 
-                : 'w-[600px] rounded-l-2xl'
+                : `h-[${PANEL_HEIGHT}] w-[400px] rounded-xl bg-[#1F2937] shadow-[0_0_15px_0_rgba(46,255,212,0.3)]`
             }`}
             variants={panelVariants}
             initial="hidden"
@@ -538,36 +559,6 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                 </svg>
               </motion.button>
 
-              {/* KOL Treasury Button (Desktop) */}
-              {!isMobile && (
-                <motion.button
-                  onClick={toggleKOLView}
-                  className="absolute -right-[180px] top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 bg-[#1F2937] border border-[#FFD700]/30 rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.2)] group cursor-pointer z-50"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">
-                    KOL Treasury
-                  </span>
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-5 w-5 text-[#FFD700] group-hover:scale-110 transition-transform duration-300" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2}
-                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
-                    />
-                  </svg>
-                </motion.button>
-              )}
-
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-[#6C3CE9]/30 bg-[#1F2937] shrink-0">
                 <div className="flex items-center space-x-3">
@@ -590,6 +581,46 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                   </button>
                 </div>
               </div>
+
+              {/* KOL Treasury Button - Always visible */}
+              <motion.button
+                onClick={toggleKOLView}
+                className={`fixed flex items-center gap-2 px-4 py-2.5 bg-[#1F2937] border-2 border-[#FFD700] rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.3)] group cursor-pointer z-[60] ${
+                  isMobile 
+                    ? 'right-10 top-20 scale-90' // Mobile positioning - below header
+                    : 'left-[1300px] top-[37px]' // Desktop positioning - outside panel
+                }`}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: isMobile ? 0.9 : 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                whileHover={{ 
+                  scale: isMobile ? 0.95 : 1.05,
+                  boxShadow: '0 0 20px 0 rgba(255,215,0,0.4)'
+                }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ 
+                  duration: 0.2,
+                  ease: "easeInOut"
+                }}
+              >
+                <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent whitespace-nowrap">
+                  KOL Treasury
+                </span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-5 w-5 text-[#FFD700] group-hover:scale-110 transition-transform duration-300" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2}
+                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
+                  />
+                </svg>
+              </motion.button>
 
               {/* Content Container with Views */}
               <div className="relative flex-1 min-h-0 overflow-hidden bg-[#1F2937]">
