@@ -1,4 +1,4 @@
-import { SearchParams, Tweet } from './twitterAnalyzer';
+import { SearchParams } from './twitterAnalyzer';
 
 class TwitterApiError extends Error {
     constructor(
