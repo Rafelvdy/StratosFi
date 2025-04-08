@@ -500,7 +500,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
             {/* Add Reset Button */}
             <motion.button
               onClick={handleResetChat}
-              className="absolute -left-12 top-[calc(50%+4rem)] -translate-y-1/2 w-10 h-10 bg-[#1F2937]/80 backdrop-blur-md border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer group"
+              className="absolute -left-12 top-6 w-10 h-10 bg-[#1F2937]/80 backdrop-blur-md border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer group"
               variants={resetButtonVariants}
               initial="hidden"
               animate="visible"
