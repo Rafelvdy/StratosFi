@@ -29,6 +29,96 @@ export interface ChatMessage {
   isExpanded?: boolean
 }
 
+// Add new types for Web3 education
+interface Web3Response {
+  content: string;
+  codeExample?: {
+    language: string;
+    code: string;
+  };
+  followUpQuestions?: string[];
+  documentationLinks?: string[];
+  experienceLevel: 'beginner' | 'intermediate' | 'advanced';
+}
+
+interface ChatMode {
+  id: 'sentiment' | 'web3';
+  icon: string;
+  label: string;
+  description: string;
+}
+
+const CHAT_MODES: ChatMode[] = [
+  {
+    id: 'sentiment',
+    icon: '📊',
+    label: 'Sentiment Analysis',
+    description: 'Analyze market sentiment and crypto trends'
+  },
+  {
+    id: 'web3',
+    icon: '🌐',
+    label: 'Web3 Assistant',
+    description: 'Get help with Web3 development and concepts'
+  }
+];
+
+// Update the welcome message
+const WELCOME_MESSAGE = `Hello, I am Stratos AI, your personal sentiment analysis and web3 assistant. Ask me about ticker sentiments or web3 concepts, I can do it all!`
+
+// Update the header section
+const Header = ({ currentMode, setCurrentMode, onCloseAction }: { 
+  currentMode: 'sentiment' | 'web3', 
+  setCurrentMode: (mode: 'sentiment' | 'web3') => void,
+  onCloseAction: () => void
+}) => (
+  <div className="flex items-center justify-between p-5 border-b border-[#6C3CE9]/30 bg-[#1F2937] shrink-0">
+    <div className="flex items-center space-x-3">
+      <div className="w-8 h-8 bg-[#6C3CE9] rounded-full flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+          <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+        </svg>
+      </div>
+      <div className="flex items-center gap-4">
+        <h2 className="text-xl font-medium text-white">Stratos AI</h2>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1F2937] border border-[#6C3CE9]/30 rounded-full">
+          <button
+            onClick={() => setCurrentMode('sentiment')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all ${
+              currentMode === 'sentiment'
+                ? 'bg-[#6C3CE9] text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <span className="text-sm">📊</span>
+            <span className="text-xs font-medium">Sentiment</span>
+          </button>
+          <button
+            onClick={() => setCurrentMode('web3')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all ${
+              currentMode === 'web3'
+                ? 'bg-[#6C3CE9] text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <span className="text-sm">🌐</span>
+            <span className="text-xs font-medium">Web3</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <button 
+      onClick={onCloseAction}
+      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+)
+
 export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   const PANEL_HEIGHT = 'calc(100vh - 48px)';
   const { connected, publicKey } = useWallet()
@@ -37,7 +127,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     {
       id: 'welcome-0',
       role: 'assistant',
-      content: 'Hello! I am Stratos AI, your personal sentiment analysis assistant. How can I help you today?',
+      content: WELCOME_MESSAGE,
       timestamp: new Date()
     }
   ])
@@ -60,13 +150,13 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     timeframe: '24h'
   });
   const { isMobile } = useWindowSize();
-
+  const [currentMode, setCurrentMode] = useState<ChatMode['id']>('sentiment');
+  const [expandedSections, setExpandedSections] = useState<{[key: string]: ExpandedState}>({});
+  
   interface ExpandedState {
     insights: boolean;
     events: boolean;
   }
-  
-  const [expandedSections, setExpandedSections] = useState<{[key: string]: ExpandedState}>({});
   
   const toggleSection = (messageId: string, section: keyof ExpandedState) => {
     setExpandedSections(prev => ({
@@ -225,80 +315,120 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onCloseAction]);
 
+  // Handle message submission based on current mode
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isLoading) return
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: `${Date.now()}-${messageCounterRef.current++}`,
       role: 'user',
       content: input,
       timestamp: new Date()
-    }
-    
-    // Clear input immediately after creating message
-    setInput('')
-    setMessages(prev => [...prev, userMessage])
-    setIsLoading(true)
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
 
     try {
-      // Extract ticker from user message
-      const tickerMatch = input.match(/\b(BTC|ETH|SOL|DOGE|XRP|ADA)\b/i);
-      if (tickerMatch) {
-        setCurrentTicker(tickerMatch[0].toUpperCase());
+      let response;
+      if (currentMode === 'sentiment') {
+        // Existing sentiment analysis logic
+        response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: input })
+        });
+      } else {
+        // Web3 education logic
+        response = await fetch('/api/web3', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: input })
+        });
       }
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: input }),
-      })
+      const data = await response.json();
 
-      const contentType = response.headers.get('content-type')
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response')
-      }
-
-      const data = await response.json()
-      console.log('DEBUG: Chat API Response:', data)
-
-      if (data.success && Array.isArray(data.messages)) {
-        // Add each message separately
-        for (const msg of data.messages) {
+      if (currentMode === 'sentiment') {
+        // Handle sentiment analysis response
+        if (data.success && Array.isArray(data.messages)) {
+          for (const msg of data.messages) {
+            const assistantMessage: ChatMessage = {
+              id: `${Date.now()}-${messageCounterRef.current++}`,
+              role: 'assistant',
+              content: msg.content,
+              timestamp: new Date(),
+              colorValue: msg.colorValue
+            };
+            setMessages(prev => [...prev, assistantMessage]);
+          }
+        }
+      } else {
+        // Handle Web3 education response
+        if (data.success) {
+          const { response: web3Response } = data;
           const assistantMessage: ChatMessage = {
             id: `${Date.now()}-${messageCounterRef.current++}`,
             role: 'assistant',
-            content: msg.content,
+            content: web3Response.content,
             timestamp: new Date(),
-            colorValue: msg.colorValue
+            colorValue: {
+              value: web3Response.experienceLevel,
+              color: web3Response.experienceLevel === 'beginner' ? '#2EFFD4' : 
+                     web3Response.experienceLevel === 'intermediate' ? '#6C3CE9' : '#FF6B6B'
+            }
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+
+          // Add code example if present
+          if (web3Response.codeExample) {
+            const codeMessage: ChatMessage = {
+              id: `${Date.now()}-${messageCounterRef.current++}`,
+              role: 'assistant',
+              content: `\`\`\`${web3Response.codeExample.language}\n${web3Response.codeExample.code}\n\`\`\``,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, codeMessage]);
           }
-          setMessages(prev => [...prev, assistantMessage])
+
+          // Add follow-up questions if present
+          if (web3Response.followUpQuestions?.length) {
+            const followUpMessage: ChatMessage = {
+              id: `${Date.now()}-${messageCounterRef.current++}`,
+              role: 'assistant',
+              content: `Follow-up questions:\n${web3Response.followUpQuestions.map((q: string) => `• ${q}`).join('\n')}`,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, followUpMessage]);
+          }
+
+          // Add documentation links if present
+          if (web3Response.documentationLinks?.length) {
+            const docsMessage: ChatMessage = {
+              id: `${Date.now()}-${messageCounterRef.current++}`,
+              role: 'assistant',
+              content: `Documentation:\n${web3Response.documentationLinks.map((link: string) => `• ${link}`).join('\n')}`,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, docsMessage]);
+          }
         }
-      } else {
-        // Handle error case
-        const errorMessage: ChatMessage = {
-          id: `${Date.now()}-${messageCounterRef.current++}`,
-          role: 'assistant',
-          content: "I couldn't process that request. Please try asking about cryptocurrency sentiment (e.g., BTC, ETH, SOL).",
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, errorMessage])
       }
     } catch (err) {
-      console.error('Error:', err)
-      const assistantMessage: ChatMessage = {
+      console.error('Error:', err);
+      const errorMessage: ChatMessage = {
         id: `${Date.now()}-${messageCounterRef.current++}`,
         role: 'assistant',
         content: "I'm having trouble processing requests right now. Please try again in a moment.",
         timestamp: new Date()
-      }
-      setMessages(prev => [...prev, assistantMessage])
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const toggleExpand = () => {
     setIsExpanded(prev => !prev)
@@ -559,28 +689,12 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                 </svg>
               </motion.button>
 
-              {/* Header */}
-              <div className="flex items-center justify-between p-5 border-b border-[#6C3CE9]/30 bg-[#1F2937] shrink-0">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#6C3CE9] rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                      <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-medium text-white">Stratos AI</h2>
-                </div>
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={onCloseAction}
-                    className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+              {/* Header with Mode Toggle */}
+              <Header 
+                currentMode={currentMode} 
+                setCurrentMode={setCurrentMode} 
+                onCloseAction={onCloseAction} 
+              />
 
               {/* KOL Treasury Button - Always visible */}
               <motion.button
