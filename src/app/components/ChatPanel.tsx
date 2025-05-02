@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { saveChatToWallet, loadChatFromWallet } from '../utils/walletStorage'
 import { debounce } from 'lodash'
@@ -11,10 +11,11 @@ import { KOLTweet, Tweet } from '../utils/twitterApi'
 import { SentimentData } from '../../hooks/useSentimentData'
 import { useSentimentData } from '../../hooks/useSentimentData'
 import { useWindowSize } from '../../hooks/useWindowSize'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 
 interface ChatPanelProps {
   isOpen: boolean
-  onCloseAction: () => void
+  onCloseAction?: () => void
 }
 
 export interface ChatMessage {
@@ -63,14 +64,29 @@ const CHAT_MODES: ChatMode[] = [
   }
 ];
 
-// Update the welcome message
+// Original welcome message
 const WELCOME_MESSAGE = `Hello, I am Stratos AI, your personal sentiment analysis and web3 assistant. Ask me about ticker sentiments or web3 concepts, I can do it all!`
 
+// Create mode-specific welcome messages
+const SENTIMENT_WELCOME_MESSAGE = `Hello! I am Stratos AI, your personal sentiment analysis assistant. Ask me about any cryptocurrency to analyze its market sentiment.`
+const WEB3_WELCOME_MESSAGE = `Hello! I am Stratos AI, your Web3 education assistant. Ask me anything about blockchain, Solana, or Web3 development.`
+
+// Get welcome message based on current mode
+const getWelcomeMessage = (mode: 'sentiment' | 'web3') => {
+  switch (mode) {
+    case 'sentiment':
+      return SENTIMENT_WELCOME_MESSAGE;
+    case 'web3':
+      return WEB3_WELCOME_MESSAGE;
+    default:
+      return WELCOME_MESSAGE;
+  }
+};
+
 // Update the header section
-const Header = ({ currentMode, setCurrentMode, onCloseAction }: { 
+const Header = ({ currentMode, setCurrentMode }: { 
   currentMode: 'sentiment' | 'web3', 
-  setCurrentMode: (mode: 'sentiment' | 'web3') => void,
-  onCloseAction: () => void
+  setCurrentMode: (mode: 'sentiment' | 'web3') => void
 }) => (
   <div className="flex items-center justify-between p-5 border-b border-[#6C3CE9]/30 bg-[#1F2937] shrink-0">
     <div className="flex items-center space-x-3">
@@ -92,7 +108,7 @@ const Header = ({ currentMode, setCurrentMode, onCloseAction }: {
             }`}
           >
             <span className="text-sm">📊</span>
-            <span className="text-xs font-medium">Sentiment</span>
+            <span className="text-xs font-medium hidden md:inline">Sentiment</span>
           </button>
           <button
             onClick={() => setCurrentMode('web3')}
@@ -103,19 +119,11 @@ const Header = ({ currentMode, setCurrentMode, onCloseAction }: {
             }`}
           >
             <span className="text-sm">🌐</span>
-            <span className="text-xs font-medium">Web3</span>
+            <span className="text-xs font-medium hidden md:inline">Web3</span>
           </button>
         </div>
       </div>
     </div>
-    <button 
-      onClick={onCloseAction}
-      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
   </div>
 )
 
@@ -153,10 +161,50 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   const [currentMode, setCurrentMode] = useState<ChatMode['id']>('sentiment');
   const [expandedSections, setExpandedSections] = useState<{[key: string]: ExpandedState}>({});
   
+  // Custom mode change handler with localStorage persistence and logging
+  const handleModeChange = (mode: ChatMode['id']) => {
+    console.log(`Switching mode from ${currentMode} to ${mode}`);
+    setCurrentMode(mode);
+    localStorage.setItem('chatMode', mode);
+    
+    // Update input placeholder based on mode
+    if (inputRef.current) {
+      inputRef.current.placeholder = mode === 'sentiment' 
+        ? "Ask about cryptocurrency sentiment (e.g., 'How is BTC sentiment today?')" 
+        : "Ask about Web3 topics (e.g., 'How do Solana transactions work?')";
+    }
+  };
+  
   interface ExpandedState {
     insights: boolean;
     events: boolean;
   }
+  
+  // Load saved mode from localStorage on initial render
+  useEffect(() => {
+    const savedMode = localStorage.getItem('chatMode') as ChatMode['id'] | null;
+    if (savedMode && (savedMode === 'sentiment' || savedMode === 'web3')) {
+      console.log(`Loading saved mode from localStorage: ${savedMode}`);
+      setCurrentMode(savedMode);
+      
+      // Update welcome message based on the saved mode
+      setMessages([{
+        id: 'welcome-0',
+        role: 'assistant',
+        content: getWelcomeMessage(savedMode),
+        timestamp: new Date()
+      }]);
+    }
+  }, []);
+  
+  // Update input placeholder based on current mode
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.placeholder = currentMode === 'sentiment' 
+        ? "Ask about cryptocurrency sentiment (e.g., 'How is BTC sentiment today?')" 
+        : "Ask about Web3 topics (e.g., 'How do Solana transactions work?')";
+    }
+  }, [currentMode, inputRef.current]);
   
   const toggleSection = (messageId: string, section: keyof ExpandedState) => {
     setExpandedSections(prev => ({
@@ -301,20 +349,6 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
     }
   }, [isOpen]);
 
-  // Handle click outside to close panel
-  useEffect(() => {
-    if (!isOpen) return; // Don't add listener if panel is closed
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        onCloseAction();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onCloseAction]);
-
   // Handle message submission based on current mode
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -335,6 +369,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
       let response;
       if (currentMode === 'sentiment') {
         // Existing sentiment analysis logic
+        console.log(`Using sentiment analysis mode - calling /api/chat with prompt: ${input.substring(0, 50)}${input.length > 50 ? '...' : ''}`);
         response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -342,6 +377,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
         });
       } else {
         // Web3 education logic
+        console.log(`Using Web3 education mode - calling /api/web3 with prompt: ${input.substring(0, 50)}${input.length > 50 ? '...' : ''}`);
         response = await fetch('/api/web3', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -350,6 +386,7 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
       }
 
       const data = await response.json();
+      console.log(`Received API response for ${currentMode} mode:`, data);
 
       if (currentMode === 'sentiment') {
         // Handle sentiment analysis response
@@ -364,6 +401,8 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
             };
             setMessages(prev => [...prev, assistantMessage]);
           }
+        } else {
+          console.error('Unexpected response format from sentiment API:', data);
         }
       } else {
         // Handle Web3 education response
@@ -414,10 +453,12 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
             };
             setMessages(prev => [...prev, docsMessage]);
           }
+        } else {
+          console.error('Unexpected response format from web3 API:', data);
         }
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error(`Error in ${currentMode} mode:`, err);
       const errorMessage: ChatMessage = {
         id: `${Date.now()}-${messageCounterRef.current++}`,
         role: 'assistant',
@@ -443,11 +484,11 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
   }
 
   const confirmReset = () => {
-    // Reset to initial welcome message
+    // Reset to initial welcome message with mode-specific content
     setMessages([{
       id: 'welcome-0',
       role: 'assistant',
-      content: 'Hello! I am Stratos AI, your personal sentiment analysis assistant. How can I help you today?',
+      content: getWelcomeMessage(currentMode),
       timestamp: new Date()
     }])
     
@@ -493,14 +534,13 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
 
   const panelVariants = {
     hidden: { 
-      x: isMobile ? '100%' : '100%', 
-      opacity: 0 
+      opacity: 0,
+      x: 20
     },
     visible: { 
-      x: '0%', 
       opacity: 1,
-      width: isMobile ? '100%' : '400px',
-      height: isMobile ? '100%' : PANEL_HEIGHT,
+      x: 0,
+      height: PANEL_HEIGHT,
       transition: { 
         type: 'spring',
         stiffness: 300,
@@ -508,21 +548,9 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
         duration: 0.5
       }
     },
-    expanded: {
-      x: '0%',
-      opacity: 1,
-      width: isMobile ? '100%' : 'calc(100vw - 385px)',
-      height: isMobile ? '100%' : PANEL_HEIGHT,
-      transition: {
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        duration: 0.5
-      }
-    },
     exit: { 
-      x: isMobile ? '100%' : '100%', 
       opacity: 0,
+      x: 20,
       transition: { 
         duration: 0.3,
         ease: 'easeInOut'
@@ -626,115 +654,123 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            onClick={onCloseAction}
           />
 
           {/* Panel */}
           <motion.div
             ref={panelRef}
-            className={`fixed right-6 top-6 z-50 flex flex-col ${
-              isMobile 
-                ? 'inset-0' 
-                : `h-[${PANEL_HEIGHT}] w-[400px] rounded-xl bg-[#1F2937] shadow-[0_0_15px_0_rgba(46,255,212,0.3)]`
-            }`}
+            className="fixed top-6 bottom-6 left-6 right-6 z-50 flex flex-col rounded-xl bg-[#1F2937] shadow-[0_0_15px_0_rgba(46,255,212,0.3)]"
             variants={panelVariants}
             initial="hidden"
-            animate={isExpanded ? "expanded" : "visible"}
+            animate="visible"
             exit="exit"
           >
             {/* Panel Background */}
-            <div className="absolute inset-0 bg-[#1F2937]/95 border-l border-[#6C3CE9]/30 shadow-[0_0_15px_0_rgba(46,255,212,0.3)] pointer-events-none" />
+            <div className="absolute inset-0 bg-[#1F2937]/95 border border-[#6C3CE9]/30 shadow-[0_0_15px_0_rgba(46,255,212,0.3)] rounded-xl pointer-events-none" />
 
             {/* Panel Content */}
             <div className="relative flex flex-col h-full w-full">
-              {/* Expand Arrow Button */}
-              {!isMobile && (
-                <motion.button
-                  onClick={toggleExpand}
-                  className="absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1F2937] border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer z-50"
-                  variants={arrowVariants}
-                  initial="hidden"
-                  animate="visible"
+              {/* Action Buttons Bar - Repositioned at the top */}
+              <div className="absolute top-0 inset-x-0 flex items-center justify-end z-50 px-5 h-[69px] top-[6px]"> {/* Match header height */}
+                {/* Wallet Connect Button - Added to the left of KOL Treasury */}
+                <motion.div
+                  className="mr-4"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    transition: {
+                      duration: 0.3,
+                      ease: "easeInOut",
+                      delay: 0.1
+                    }
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </motion.button>
-              )}
+                  <WalletMultiButton className="!bg-[#6C3CE9] hover:!bg-[#8150FF] transition-colors !h-[40px]" />
+                </motion.div>
 
-              {/* Reset Button */}
-              <motion.button
-                onClick={handleResetChat}
-                className={`absolute w-10 h-10 bg-[#1F2937] border border-[#6C3CE9]/30 rounded-full flex items-center justify-center text-white hover:bg-[#6C3CE9]/20 transition-colors shadow-[0_0_15px_0_rgba(46,255,212,0.2)] cursor-pointer group z-50 ${
-                  isMobile ? 'left-4 top-4' : '-left-12 top-6'
-                }`}
-                variants={resetButtonVariants}
-                initial="hidden"
-                animate="visible"
-                title="Reset Chat"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5 group-hover:text-[#2EFFD4] transition-colors" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
+                {/* KOL Treasury Button - Repositioned to action bar */}
+                <motion.button
+                  onClick={toggleKOLView}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#1F2937] border border-[#FFD700] rounded-lg text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.3)] group cursor-pointer mr-4"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    transition: {
+                      duration: 0.3,
+                      ease: "easeInOut",
+                      delay: 0.2
+                    }
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: '0 0 20px 0 rgba(255,215,0,0.4)'
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  title="KOL Treasury"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </motion.button>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-5 w-5 text-[#FFD700] group-hover:scale-110 transition-transform duration-300" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2}
+                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
+                    />
+                  </svg>
+                  <span className="font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent whitespace-nowrap">
+                    KOL Treasury
+                  </span>
+                </motion.button>
+
+                {/* Reset/Delete Button - Repositioned to action bar */}
+                <motion.button
+                  onClick={handleResetChat}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#1F2937] border border-red-500/50 rounded-lg text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(220,38,38,0.3)] group cursor-pointer"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    transition: { 
+                      delay: 0.3,
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 25
+                    }
+                  }}
+                  title="Reset Chat"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-5 w-5 text-red-400 group-hover:text-red-300 transition-colors" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                  <span className="font-medium text-red-400 group-hover:text-red-300 transition-colors">Reset Chat</span>
+                </motion.button>
+              </div>
 
               {/* Header with Mode Toggle */}
               <Header 
                 currentMode={currentMode} 
-                setCurrentMode={setCurrentMode} 
-                onCloseAction={onCloseAction} 
+                setCurrentMode={handleModeChange} 
               />
-
-              {/* KOL Treasury Button - Always visible */}
-              <motion.button
-                onClick={toggleKOLView}
-                className={`fixed flex items-center gap-2 px-4 py-2.5 bg-[#1F2937] border-2 border-[#FFD700] rounded-xl text-white hover:bg-[#1F2937]/90 transition-all duration-300 shadow-[0_0_15px_0_rgba(255,215,0,0.3)] group cursor-pointer z-[60] ${
-                  isMobile 
-                    ? 'right-10 top-20 scale-90' // Mobile positioning - below header
-                    : 'left-[1300px] top-[37px]' // Desktop positioning - outside panel
-                }`}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: isMobile ? 0.9 : 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                whileHover={{ 
-                  scale: isMobile ? 0.95 : 1.05,
-                  boxShadow: '0 0 20px 0 rgba(255,215,0,0.4)'
-                }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ 
-                  duration: 0.2,
-                  ease: "easeInOut"
-                }}
-              >
-                <span className="text-sm font-medium bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent whitespace-nowrap">
-                  KOL Treasury
-                </span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5 text-[#FFD700] group-hover:scale-110 transition-transform duration-300" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2}
-                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
-                  />
-                </svg>
-              </motion.button>
 
               {/* Content Container with Views */}
               <div className="relative flex-1 min-h-0 overflow-hidden bg-[#1F2937]">
@@ -748,253 +784,204 @@ export const ChatPanel = ({ isOpen, onCloseAction }: ChatPanelProps) => {
                   {/* Messages Container */}
                   <div 
                     ref={scrollContainerRef}
-                    className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 messages-container scroll-smooth bg-[#1F2937]"
+                    className="flex-1 overflow-y-auto hidden-scrollbar px-4 py-3"
                     onScroll={handleScroll}
                   >
-                    {messages.map(message => (
-                      <div 
-                        key={message.id} 
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div 
-                          className={`max-w-[80%] rounded-2xl p-4 ${
-                            message.role === 'user' 
-                              ? 'bg-[#6C3CE9] text-white' 
-                              : 'bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white'
-                          }`}
-                        >
-                          {message.colorValue ? (
-                            <p>
-                              {message.content.split(message.colorValue.value).map((part, i, arr) => (
-                                <React.Fragment key={`${message.id}-color-${i}`}>
-                                  {part}
-                                  {i < arr.length - 1 && message.colorValue && (
-                                    <span style={{ color: message.colorValue.color }}>
-                                      {message.colorValue.value}
-                                    </span>
-                                  )}
-                                </React.Fragment>
-                              ))}
-                            </p>
+                    <div className="max-w-5xl mx-auto">
+                      {messages.map((message, index) => (
+                        <div key={message.id} className="mb-4">
+                          {message.role === 'user' ? (
+                            <div className="flex justify-end">
+                              <div className="max-w-[85%] bg-[#6C3CE9]/30 p-4 rounded-2xl rounded-tr-none">
+                                <p className="text-white">{message.content}</p>
+                                <div className="mt-1 text-right">
+                                  <span className="text-xs text-gray-400">
+                                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           ) : (
-                            <div className="space-y-2">
-                              {message.content.includes('Key Insights:') || message.content.includes('Significant Events:') ? (
-                                <>
-                                  {(() => {
-                                    const sections = {
-                                      insights: message.content.includes('Key Insights:') ? 
-                                        message.content.substring(
-                                          message.content.indexOf('Key Insights:'),
-                                          message.content.includes('Significant Events:') ? 
-                                            message.content.indexOf('Significant Events:') : 
-                                            undefined
-                                        ) : '',
-                                      events: message.content.includes('Significant Events:') ?
-                                        message.content.substring(message.content.indexOf('Significant Events:')) : ''
-                                    };
-
-                                    return (
+                            <div className="flex justify-start">
+                              <div className={`max-w-[85%] bg-[#1A1A1A] p-4 rounded-2xl rounded-tl-none ${message.colorValue ? `border-l-4` : ''}`} style={message.colorValue ? { borderLeftColor: message.colorValue.color } : {}}>
+                                <div className="prose prose-invert max-w-none">
+                                  {message.content.includes('```') ? (
+                                    <div>
+                                      {message.content.split(/```(?:[\w-]+)?\n/).map((part, i, arr) => {
+                                        if (i % 2 === 0) {
+                                          return <p key={i} className="whitespace-pre-wrap">{part}</p>;
+                                        } else {
+                                          return (
+                                            <pre key={i} className="bg-gray-800 p-3 rounded overflow-x-auto hidden-scrollbar my-2">
+                                              <code className="text-sm text-gray-300">{part}</code>
+                                            </pre>
+                                          );
+                                        }
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <p className="whitespace-pre-wrap">{message.content}</p>
+                                  )}
+                                  
+                                  {message.colorValue && (
+                                    <div className="mt-2 flex items-center">
+                                      <span 
+                                        className="inline-block w-3 h-3 rounded-full mr-2"
+                                        style={{ backgroundColor: message.colorValue.color }}
+                                      />
+                                      <span className="text-sm text-gray-400">
+                                        {message.colorValue.value}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="mt-1 flex justify-between items-center">
+                                  <div className="flex space-x-2">
+                                    {message.colorValue && message.colorValue.value === 'Sentiment Analysis' && (
                                       <>
-                                        {/* Render Key Insights section */}
-                                        {sections.insights && (
-                                          <div className="mb-4">
-                                            <p className="font-medium mb-2">Key Insights:</p>
-                                            {(() => {
-                                              const lines = sections.insights.split('\n').slice(1);
-                                              const isExpanded = expandedSections[message.id]?.insights;
-                                              const displayLines = isExpanded ? lines : lines.slice(0, 1);
-                                              
-                                              return (
-                                                <>
-                                                  {displayLines.map((line, index) => (
-                                                    <div key={`${message.id}-insight-${index}`} className="pl-4 -mt-1">
-                                                      <p className="whitespace-pre-line">{line.trim()}</p>
-                                                    </div>
-                                                  ))}
-                                                  {lines.length > 1 && (
-                                                    <button
-                                                      onClick={() => toggleSection(message.id, 'insights')}
-                                                      className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors cursor-pointer"
-                                                    >
-                                                      {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
-                                                    </button>
-                                                  )}
-                                                </>
-                                              );
-                                            })()}
-                                          </div>
-                                        )}
-
-                                        {/* Render Significant Events section */}
-                                        {sections.events && (
-                                          <div>
-                                            <p className="font-medium mb-2">Significant Events:</p>
-                                            {(() => {
-                                              const lines = sections.events.split('\n').slice(1);
-                                              const isExpanded = expandedSections[message.id]?.events;
-                                              const displayLines = isExpanded ? lines : lines.slice(0, 1);
-                                              
-                                              return (
-                                                <>
-                                                  {displayLines.map((line, index) => (
-                                                    <div key={`${message.id}-event-${index}`} className="pl-4 -mt-1">
-                                                      <p className="whitespace-pre-line">{line.trim()}</p>
-                                                    </div>
-                                                  ))}
-                                                  {lines.length > 1 && (
-                                                    <button
-                                                      onClick={() => toggleSection(message.id, 'events')}
-                                                      className="text-[#2EFFD4] text-sm mt-2 hover:text-[#2EFFD4]/80 transition-colors cursor-pointer"
-                                                    >
-                                                      {isExpanded ? 'Show less' : `Show ${lines.length - 1} more`}
-                                                    </button>
-                                                  )}
-                                                </>
-                                              );
-                                            })()}
-                                          </div>
-                                        )}
+                                        <button
+                                          onClick={() => toggleSection(message.id, 'insights')}
+                                          className="text-xs text-[#2EFFD4] hover:underline"
+                                        >
+                                          {expandedSections[message.id]?.insights ? 'Hide Insights' : 'Show Insights'}
+                                        </button>
+                                        <span className="text-gray-500">|</span>
+                                        <button
+                                          onClick={() => toggleSection(message.id, 'events')}
+                                          className="text-xs text-[#2EFFD4] hover:underline"
+                                        >
+                                          {expandedSections[message.id]?.events ? 'Hide Events' : 'Show Events'}
+                                        </button>
                                       </>
-                                    );
-                                  })()}
-                                </>
-                              ) : (
-                                <p>{message.content}</p>
-                              )}
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-gray-400">
+                                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           )}
-                          <p className="text-xs opacity-70 mt-1 text-right">
-                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
                         </div>
-                      </div>
-                    ))}
-                    {isLoading && (
-                      <div className="flex justify-start">
-                        <div className="bg-[#2EFFD4]/10 border border-[#2EFFD4]/30 text-white rounded-2xl p-4">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" />
-                            <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-100" />
-                            <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce delay-200" />
+                      ))}
+                      <div ref={messagesEndRef} />
+                      
+                      {isLoading && (
+                        <div className="flex justify-start mb-4">
+                          <div className="max-w-[85%] bg-[#1A1A1A] p-4 rounded-2xl rounded-tl-none">
+                            <div className="flex space-x-2">
+                              <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                              <div className="w-2 h-2 bg-[#2EFFD4] rounded-full animate-bounce" style={{ animationDelay: '600ms' }} />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    <div ref={messagesEndRef} className="h-0" /> {/* Add height-0 to prevent unwanted spacing */}
+                      )}
+                    </div>
                   </div>
-
-                  {/* Input Area */}
-                  <div className="p-4 border-t border-[#6C3CE9]/30 shrink-0">
-                    <form onSubmit={handleSubmit} className="flex space-x-3">
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Type your message..."
-                        className="flex-1 bg-[#374151] text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#2EFFD4]/50"
-                        disabled={isLoading}
-                      />
-                      <button 
-                        type="submit"
-                        className="bg-[#2EFFD4] text-black rounded-lg px-4 py-2 hover:bg-opacity-80 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        disabled={isLoading || !input.trim()}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </form>
+                  
+                  {/* Input Form */}
+                  <div className="p-4 border-t border-[#6C3CE9]/30">
+                    <div className="max-w-5xl mx-auto">
+                      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                        <div className="hidden md:flex items-center mr-2 px-2 py-1 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg">
+                          <span className="text-sm mr-1">
+                            {currentMode === 'sentiment' ? '📊' : '🌐'}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {currentMode === 'sentiment' ? 'Sentiment Mode' : 'Web3 Mode'}
+                          </span>
+                        </div>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          placeholder={currentMode === 'sentiment' 
+                            ? "Ask about cryptocurrency sentiment (e.g., 'How is BTC sentiment today?')" 
+                            : "Ask about Web3 topics (e.g., 'How do Solana transactions work?')"}
+                          className={`flex-1 bg-[#1A1A1A] border border-[#2A2A2A] focus:border-[#6C3CE9] rounded-xl px-4 py-3 text-white focus:outline-none ${
+                            currentMode === 'sentiment' 
+                              ? 'border-l-4 border-l-[#2EFFD4]' 
+                              : 'border-l-4 border-l-[#6C3CE9]'
+                          }`}
+                          disabled={isLoading}
+                        />
+                        <button
+                          type="submit"
+                          disabled={isLoading || !input.trim()}
+                          className={`w-12 h-12 ${
+                            currentMode === 'sentiment' 
+                              ? 'bg-[#2EFFD4] hover:bg-[#29E6BE]' 
+                              : 'bg-[#6C3CE9] hover:bg-[#5C2CD9]'
+                          } disabled:opacity-50 disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-colors`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 </motion.div>
 
-                {/* KOL Treasury View */}
+                {/* KOL Tweets View */}
                 <motion.div
-                  className="absolute inset-0 w-full h-full flex flex-col bg-[#1F2937]/80"
+                  className="absolute inset-0 w-full h-full"
                   variants={kolViewVariants}
                   initial="hidden"
                   animate={isKOLView ? "visible" : "hidden"}
                 >
-                  {/* KOL Treasury Header */}
-                  <div className="flex items-center justify-between p-5 border-b border-[#FFD700]/30 shrink-0">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-[#FFD700] rounded-full flex items-center justify-center">
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          className="h-5 w-5 text-[#1F2937]" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2}
-                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-14 0l2-2m12 0l-2-2"
-                          />
-                        </svg>
-                      </div>
-                      <h2 className="text-xl font-medium text-white">KOL Treasury</h2>
-                    </div>
-                    <button
-                      onClick={toggleKOLView}
-                      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* KOL Treasury Content */}
-                  <div className="flex-1 overflow-y-auto">
-                    {kolTweets.length > 0 ? (
-                      <KOLTweetList tweets={kolTweets} />
-                    ) : (
-                      <div className="text-white text-center py-8">
-                        <p className="text-lg mb-4">KOL Treasury Content</p>
-                        <p className="text-gray-400">Your collected KOL tweets will appear here</p>
-                      </div>
-                    )}
-                  </div>
+                  <KOLTweetList 
+                    tweets={kolTweets} 
+                    onBack={toggleKOLView}
+                    ticker={currentTicker}
+                  />
                 </motion.div>
               </div>
-
-              {/* Add Confirmation Dialog */}
-              <AnimatePresence>
-                {showResetConfirm && (
-                  <motion.div
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 rounded-xl"
-                    variants={confirmDialogVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                  >
-                    <div className="bg-[#1F2937] border border-[#6C3CE9]/30 rounded-lg p-6 max-w-sm mx-4 shadow-lg">
-                      <h3 className="text-lg font-medium text-white mb-4">Reset Chat?</h3>
-                      <p className="text-gray-300 mb-6">This will delete all messages and cannot be undone.</p>
-                      <div className="flex justify-end space-x-4">
-                        <button
-                          onClick={() => setShowResetConfirm(false)}
-                          className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={confirmReset}
-                          className="px-4 py-2 text-sm font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 hover:text-red-200 rounded transition-colors"
-                        >
-                          Reset
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </motion.div>
         </>
       )}
+
+      {/* Reset Confirmation Dialog */}
+      <AnimatePresence>
+        {showResetConfirm && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowResetConfirm(false)}
+            />
+            <motion.div
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-[#1F2937] rounded-xl p-5 z-[70] shadow-[0_0_25px_0_rgba(46,255,212,0.3)]"
+              variants={confirmDialogVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              <h3 className="text-lg font-medium text-white mb-3">Reset Chat History?</h3>
+              <p className="text-gray-300 text-sm mb-5">This will delete all messages from this chat permanently.</p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmReset}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm"
+                >
+                  Reset
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
-  )
-} 
+  );
+}; 
