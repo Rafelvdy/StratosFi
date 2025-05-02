@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { TransitionLayout } from './components/TransitionLayout'
 
-// Dynamically import the chat page with no SSR to prevent hydration issues
-const ChatPage = dynamic(() => import('./chat/page'), { ssr: false })
+// Dynamically import the dashboard page with no SSR to prevent hydration issues
+const DashboardPage = dynamic(() => import('./dashboard/page'), { ssr: false })
 
 interface Particle {
   x: number
@@ -53,7 +53,7 @@ export default function Home() {
       }
     }
     particles.current = []
-    router.push('/chat')
+    router.push('/dashboard')
   }, [router])
 
   useEffect(() => {
@@ -278,7 +278,7 @@ export default function Home() {
     <TransitionLayout
       isTransitioning={isTransitioning}
       onTransitionCompleteAction={handleTransitionComplete}
-      nextPage={<ChatPage />}
+      nextPage={<DashboardPage />}
     >
       {homeContent}
     </TransitionLayout>
