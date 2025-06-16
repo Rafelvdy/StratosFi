@@ -1,12 +1,10 @@
 "use client"
-import Image from "next/image";
 import styles from "./page.module.css";
 import LiquidBackground from "@/components/ui/LiquidBackground";
 import LaunchAppButton from "@/components/ui/button/LaunchApp";
-import { Calendar, Code, FileText, User, Clock, Target, Zap, MessageCircle, BarChart3, Coins, TrendingUp, Users } from "lucide-react";
+import { MessageCircle, BarChart3, Coins, TrendingUp, Users } from "lucide-react";
 import RadialOrbitalTimeLine from "@/components/ui/radial-orbital-timeline";
 import { Badge } from "@/components/ui/badge";
-import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 // StratosFi Enhanced Timeline Data with 5 Feature Cards
 const timelineData = [
@@ -73,7 +71,7 @@ const timelineData = [
       content: (
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <Badge className="bg-blue-500 text-white">ACTIONABLE</Badge>
+            <Badge className="bg-blue-500 text-white ">ACTIONABLE</Badge>
             <span className="text-xs text-white/50">On-Demand</span>
           </div>
           <h3 className="text-lg font-bold text-white mb-4">KOL Analysis Reports</h3>
@@ -81,8 +79,6 @@ const timelineData = [
             <p className="text-sm text-white/80">
               Generate comprehensive performance-based analysis reports about key opinion leaders and their influence on your community or project.
             </p>
-            
-            
             
             <div className="bg-white/10 rounded p-3">
               <div className="flex justify-between text-xs mb-1">

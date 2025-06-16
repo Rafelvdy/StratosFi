@@ -119,11 +119,10 @@ export default function RadialOrbitalTimeline({
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>(
     {}
   );
-  const [viewMode, setViewMode] = useState<"orbital">("orbital");
   const [rotationAngle, setRotationAngle] = useState<number>(0);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [pulseEffect, setPulseEffect] = useState<Record<number, boolean>>({});
-  const [centerOffset, setCenterOffset] = useState<{ x: number; y: number }>({
+  const [centerOffset] = useState<{ x: number; y: number }>({
     x: 0,
     y: 0,
   });
@@ -177,7 +176,7 @@ export default function RadialOrbitalTimeline({
   useEffect(() => {
     let rotationTimer: NodeJS.Timeout;
 
-    if (autoRotate && viewMode === "orbital") {
+    if (autoRotate) {
       rotationTimer = setInterval(() => {
         setRotationAngle((prev) => {
           const newAngle = (prev + 0.3) % 360;
@@ -191,10 +190,10 @@ export default function RadialOrbitalTimeline({
         clearInterval(rotationTimer);
       }
     };
-  }, [autoRotate, viewMode]);
+  }, [autoRotate]);
 
   const centerViewOnNode = (nodeId: number) => {
-    if (viewMode !== "orbital" || !nodeRefs.current[nodeId]) return;
+    if (!nodeRefs.current[nodeId]) return;
 
     const nodeIndex = timelineData.findIndex((item) => item.id === nodeId);
     const totalNodes = timelineData.length;
@@ -271,10 +270,12 @@ export default function RadialOrbitalTimeline({
                 Container: w-36 h-36, Logo: w-32 h-32, Z-index: z-30
             */}
             <div className="relative w-36  h-36 animate-pulse overflow-visible flex items-center justify-center">
-              <img
+              <Image
                 src="/logos/Stratos Bar logo (white).png"
                 alt="Stratos Logo"
-                className="w-full h-full object-contain"
+                width={144}
+                height={144}
+                className="object-contain"
                 style={{ maxWidth: "20%", maxHeight: "20%" }}
               />
             </div>
