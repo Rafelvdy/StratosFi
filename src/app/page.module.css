@@ -13,7 +13,6 @@
 }
 
 .HeroContainer {
-    /* background-color: red; */
     width: 100%;
     height: 100vh;
     display: flex;
@@ -23,7 +22,10 @@
 }
 
 .HeroTitleContainer {
-    /* background-color: blue; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .HeroTitle {
@@ -34,4 +36,17 @@
     text-align: center;
     padding: 0 10px;
     max-width: 400px;
+    text-align: center;
+}
+
+.HeroSubtitle {
+    font-family: var(--font-playfair-display);
+    font-size: 14px;
+    color: white;
+    text-align: center;
+    padding: 0 10px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    max-width: 360px;
+    text-align: center;
 }
