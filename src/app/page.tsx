@@ -20,23 +20,23 @@ const timelineData = [
     energy: 95,
     customCard: {
       content: (
-        <div className="p-6">
+        <div className="p-5 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <Badge className="bg-green-500 text-white">LIVE</Badge>
             <span className="text-xs text-white/50">Real-time</span>
           </div>
           <h3 className="text-lg font-bold text-white mb-4">Community Sentiment</h3>
           <div className="space-y-4">
-            <p className="text-sm text-white/80">
+            <p className="text-sm text-white/80 leading-relaxed">
               Our AI analyzes community conversations to generate mood insights that give you a pulse on market sentiment.
             </p>
             
             {/* Community Mood Visualization */}
-            <div className="border-t border-white/20 pt-4">
-              <h4 className="text-xs uppercase tracking-wider font-medium text-white/70 mb-3">
+            <div className="border-t border-white/20 pt-4 mt-5">
+              <h4 className="text-xs uppercase tracking-wider font-medium text-white/70 mb-4">
                 Current Market Mood
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-white/80">1/5 Negative</span>
                   <span className="text-sm font-bold text-red-400">1/5</span>
@@ -54,7 +54,6 @@ const timelineData = [
           </div>
         </div>
       ),
-      width: "w-80",
     }
   },
   {
@@ -69,28 +68,27 @@ const timelineData = [
     energy: 88,
     customCard: {
       content: (
-        <div className="p-6">
+        <div className="p-5 md:p-6">
           <div className="flex items-center justify-between mb-4">
-            <Badge className="bg-blue-500 text-white ">ACTIONABLE</Badge>
+            <Badge className="bg-blue-500 text-white">ACTIONABLE</Badge>
             <span className="text-xs text-white/50">On-Demand</span>
           </div>
           <h3 className="text-lg font-bold text-white mb-4">KOL Analysis Reports</h3>
           <div className="space-y-4">
-            <p className="text-sm text-white/80">
+            <p className="text-sm text-white/80 leading-relaxed">
               Generate comprehensive performance-based analysis reports about key opinion leaders and their influence on your community or project.
             </p>
             
-            <div className="bg-white/10 rounded p-3">
-              <div className="flex justify-between text-xs mb-1">
+            <div className="bg-white/10 rounded p-4 mt-5">
+              <div className="flex justify-between text-xs mb-2">
                 <span className="text-white/70">Actionable Insights</span>
                 <span className="text-white font-bold">Real-time</span>
               </div>
-              <p className="text-xs text-white/60">Data-driven decisions for your ecosystem</p>
+              <p className="text-xs text-white/60 leading-relaxed">Data-driven decisions for your ecosystem</p>
             </div>
           </div>
         </div>
       ),
-      width: "w-80",
     }
   },
   {
@@ -105,19 +103,19 @@ const timelineData = [
     energy: 92,
     customCard: {
       content: (
-        <div className="p-6">
+        <div className="p-5 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <Badge className="bg-yellow-500 text-black font-bold">EARN</Badge>
             <span className="text-xs text-white/50">Active</span>
           </div>
           <h3 className="text-lg font-bold text-white mb-4">Stake for Insights</h3>
           <div className="space-y-4">
-            <p className="text-sm text-white/80">
+            <p className="text-sm text-white/80 leading-relaxed">
               <span className="font-bold text-green-400">Free AI access!</span> Earn interest while you stake for premium insights and enhanced features.
             </p>
             
-            <div className="border-t border-white/20 pt-4">
-              <h4 className="text-xs uppercase tracking-wider font-medium text-white/70 mb-3">
+            <div className="border-t border-white/20 pt-4 mt-5">
+              <h4 className="text-xs uppercase tracking-wider font-medium text-white/70 mb-4">
                 Staking Benefits
               </h4>
               <div className="space-y-3">
@@ -136,17 +134,16 @@ const timelineData = [
               </div>
             </div>
             
-            <div className="bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded p-3 border border-yellow-400/30">
+            <div className="bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded p-4 border border-yellow-400/30 mt-5">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-white">Earn While You Learn</span>
                 <Coins size={16} className="text-yellow-400" />
               </div>
-              <p className="text-xs text-white/70 mt-1">Passive income meets intelligent insights</p>
+              <p className="text-xs text-white/70 mt-2 leading-relaxed">Passive income meets intelligent insights</p>
             </div>
           </div>
         </div>
       ),
-      width: "w-80",
     }
   },
   {
@@ -161,53 +158,52 @@ const timelineData = [
     energy: 90,
     customCard: {
       content: (
-        <div className="p-6">
+        <div className="p-5 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <Badge className="bg-purple-500 text-white">SMART</Badge>
             <span className="text-xs text-white/50">Custom</span>
           </div>
           <h3 className="text-lg font-bold text-white mb-4">Smart Aggregation</h3>
           <div className="space-y-4">
-            <p className="text-sm text-white/80">
+            <p className="text-sm text-white/80 leading-relaxed">
               Our AI scans X (Twitter) to aggregate key insights and events for any ticker within your specified timeframe.
             </p>
             
-            <div className="border-t border-white/20 pt-4">
-              <h4 className="text-xs uppercase tracking-wider font-medium text-white/70 mb-3">
+            <div className="border-t border-white/20 pt-4 mt-5">
+              <h4 className="text-xs uppercase tracking-wider font-medium text-white/70 mb-4">
                 Tracking Options
               </h4>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/10 rounded p-2">
+                <div className="bg-white/10 rounded p-3">
                   <div className="text-xs text-white/60">Timeframe</div>
                   <div className="text-sm font-bold text-white">1H - 30D</div>
                 </div>
-                <div className="bg-white/10 rounded p-2">
+                <div className="bg-white/10 rounded p-3">
                   <div className="text-xs text-white/60">Ticker</div>
                   <div className="text-sm font-bold text-white">Any Token</div>
                 </div>
-                <div className="bg-white/10 rounded p-2">
+                <div className="bg-white/10 rounded p-3">
                   <div className="text-xs text-white/60">Events</div>
                   <div className="text-sm font-bold text-white">Auto-Detect</div>
                 </div>
-                <div className="bg-white/10 rounded p-2">
+                <div className="bg-white/10 rounded p-3">
                   <div className="text-xs text-white/60">Insights</div>
                   <div className="text-sm font-bold text-white">Curated</div>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white/10 rounded p-3">
+            <div className="bg-white/10 rounded p-4 mt-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-bold text-white">Latest Alert</span>
                 <TrendingUp size={14} className="text-purple-400" />
               </div>
-              <p className="text-xs text-white/70">$ETH: Major partnership announcement detected</p>
+              <p className="text-xs text-white/70 leading-relaxed">$ETH: Major partnership announcement detected</p>
               <span className="text-xs text-white/50">2 minutes ago</span>
             </div>
           </div>
         </div>
       ),
-      width: "w-80",
     }
   },
   {
@@ -222,22 +218,22 @@ const timelineData = [
     energy: 98,
     customCard: {
       content: (
-        <div className="p-6">
+        <div className="p-5 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold">GOLD</Badge>
             <span className="text-xs text-white/50">Premium</span>
           </div>
           <h3 className="text-lg font-bold text-white mb-4">KOL Treasury</h3>
           <div className="space-y-4">
-            <p className="text-sm text-white/80">
+            <p className="text-sm text-white/80 leading-relaxed">
               Every analyzed tweet that meets our rigorous KOL requirements is stored in our premium treasury. This is where you find <span className="font-bold text-yellow-400">the real gold</span>.
             </p>
             
-            <div className="border-t border-white/20 pt-4">
-              <h4 className="text-xs uppercase tracking-wider font-medium text-white/70 mb-3">
+            <div className="border-t border-white/20 pt-4 mt-5">
+              <h4 className="text-xs uppercase tracking-wider font-medium text-white/70 mb-4">
                 Quality Filters
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-white/80">Follower Count</span>
                   <span className="text-sm font-bold text-white">10K+ Verified</span>
@@ -257,12 +253,12 @@ const timelineData = [
               </div>
             </div>
             
-            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded p-3 border border-yellow-400/30">
-              <div className="flex items-center justify-between mb-2">
+            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded p-4 border border-yellow-400/30 mt-5">
+              <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-bold text-white">Treasury Stats</span>
                 <Users size={14} className="text-yellow-400" />
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-white/60">KOLs Tracked:</span>
                   <span className="text-white font-bold ml-1">2,847</span>
@@ -276,7 +272,6 @@ const timelineData = [
           </div>
         </div>
       ),
-      width: "w-80",
     }
   },
 ];
@@ -296,17 +291,6 @@ export default function Home() {
 
       <div className={styles.HeroContainer}>
         <RadialOrbitalTimeLine timelineData={timelineData} />
-        {/* <div className={styles.LogoContainer}>
-          <Image src="/logos/Stratos Bar logo (White).png" alt="Stratos Bar Logo" width={200} height={200} objectFit="contain" className={styles.Logo} />
-          <p className={styles.LogoText}>Stratos scans the chatter. You stake for insights.</p>
-        </div>
-
-        <div className={styles.HeroDescriptionContainer}>
-          <p className={styles.HeroDescription}>Our AI cuts through the noise - tracking sentiment, surfacing events, and scoring voices that matter - so you don't have to waste hours researching.
-            Access clean, actionable reports built from thousands of tweets in seconds.
-          </p>
-          <LaunchAppButton />
-        </div> */}
       </div>
     </main>
   );
