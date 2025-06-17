@@ -25,19 +25,21 @@ export default function Home() {
   useEffect(() => {
     if (!titleRef.current || !subtitleRef.current || !logoRef.current || !globeRef.current) return;
   
-    // Set initial position - globe starts off-screen to the right
-    gsap.set(globeRef.current, { x: "150%" });
+      // Set initial position off-screen
+    gsap.set(globeRef.current, { right: "-50%" });
     
-    // Also create a simple ScrollTrigger as backup
     ScrollTrigger.create({
       trigger: globeRef.current,
       start: "top center",
-      end: "bottom center",
+      end: "bottom center", 
       scrub: 1,
       markers: false,
-      animation: gsap.fromTo(globeRef.current, 
-        { x: "150%" },
-        { x: "0%", ease: "none" }
+      animation: gsap.fromTo(globeRef.current,
+        { right: "-50%" },
+        { 
+          right: "25%", // Adjust this to center your globe properly
+          ease: "none"
+        }
       )
     });
 
