@@ -57,7 +57,7 @@
 }
 
 .GlobeContainer {
-    height: 550px;
+    height: 450px;
     position: fixed; /* Changed from absolute to fixed */
     bottom: 0px; /* Stays in same viewport position */
     width: 100%;
