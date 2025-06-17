@@ -32,7 +32,6 @@ export default function Home() {
       start: "bottom center",
       end: "400px center", 
       scrub: 1,
-      markers: true,
       animation: gsap.fromTo(globeRef.current,
         { right: "-150%" },
         { 
