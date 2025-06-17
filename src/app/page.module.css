@@ -18,12 +18,11 @@
 
 .HeroContainer {
     width: 100%;
-    height: 100vh;
+    height: 85vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    
 }
 
 .HeroTitleContainer {
@@ -71,4 +70,46 @@
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+}
+
+
+.StatsContainer {
+    width: 100%;
+    height: 100vh;
+}
+
+.StatsRow {
+    width: 100%;
+    height: 50vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.Spacer {
+    height: 50vh;
+    width: 100%;
+}
+
+.StatsCard {
+    height: 120px;
+    width: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.StatsCardTitle {
+    font-family: var(--font-manrope);
+    font-size: 42px;
+    font-weight: 800;
+}
+
+.StatsCardSubtitle {
+    font-family: var(--font-playfair-display);
+    font-size: 14px;
+    font-weight: 400;
 }

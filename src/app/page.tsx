@@ -9,6 +9,7 @@ import { SplitText } from "gsap/SplitText";
 import { Globe } from "@/components/ui/globe";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import CountUp from "@/components/utils/CountUp";
 
 gsap.registerPlugin(SplitText);
 gsap.registerPlugin(ScrollTrigger);
@@ -124,6 +125,28 @@ export default function Home() {
 
       <div className={styles.GlobeContainer} ref={globeRef}>
         <Globe className={styles.Globe}/>
+      </div>
+
+      <div className={styles.StatsContainer}>
+        <div className={styles.StatsRow}>
+
+          <div className={styles.StatsCard}>
+            <h1 className={styles.StatsCardTitle}><CountUp to={100} /></h1>
+            <p className={styles.StatsCardSubtitle}>Tweets Processed</p>
+          </div>
+
+          <div className={styles.StatsCard}>
+            <h1 className={styles.StatsCardTitle}><CountUp to={100} /></h1>
+            <p className={styles.StatsCardSubtitle}>KOLs Identified</p>
+          </div>
+
+          <div className={styles.StatsCard}>
+            <h1 className={styles.StatsCardTitle}><CountUp to={100}/></h1>
+            <p className={styles.StatsCardSubtitle}>Reports Generated</p>
+          </div>
+
+        </div>
+        <div className={styles.Spacer}></div>
       </div>
 
     </main>
