@@ -12,6 +12,10 @@
     z-index: 100;
 }
 
+.NavBarLogoContainer {
+    overflow: hidden;
+}
+
 .HeroContainer {
     width: 100%;
     height: 100vh;
@@ -19,6 +23,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    
 }
 
 .HeroTitleContainer {
@@ -49,4 +54,22 @@
     margin-bottom: 50px;
     max-width: 360px;
     text-align: center;
+}
+
+.GlobeContainer {
+    height: 550px;
+    position: fixed; /* Changed from absolute to fixed */
+    bottom: 0px; /* Stays in same viewport position */
+    width: 100%;
+    z-index: 1;
+    /* transform: translateX(100%); Initial position off-screen */
+    pointer-events: none; /* Prevent interference with scrolling */
+    overflow: hidden;
+}
+
+.Globe {
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+    
 }

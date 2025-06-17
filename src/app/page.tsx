@@ -6,28 +6,63 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { SplitText } from "gsap/SplitText";
+import { Globe } from "@/components/ui/globe";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 
 gsap.registerPlugin(SplitText);
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
   const logoRef = useRef(null);
+  const globeRef = useRef(null);
+  const heroContainerRef = useRef(null);
+
+  
 
   useEffect(() => {
-    if (!titleRef.current || !subtitleRef.current || !logoRef.current) return;
+    if (!titleRef.current || !subtitleRef.current || !logoRef.current || !globeRef.current) return;
+  
+    // Set initial position - globe starts off-screen to the right
+    gsap.set(globeRef.current, { x: "100%" });
+    
+    // Also create a simple ScrollTrigger as backup
+    ScrollTrigger.create({
+      trigger: globeRef.current,
+      start: "top center",
+      end: "bottom center",
+      scrub: 1,
+      markers: false,
+      animation: gsap.fromTo(globeRef.current, 
+        { x: "100%" },
+        { x: "0%", ease: "none" }
+      )
+    });
 
+        // Initialize Lenis
+    const lenis = new Lenis({
+      autoRaf: true,
+    });
+
+    // Listen for the scroll event and log the event data
+    lenis.on('scroll', (e) => {
+      console.log(e);
+    });
+  
+    // Font loading and text animations (keep existing code)
     document.fonts.ready.then(() => {
       gsap.set(titleRef.current, { opacity: 1 });
       gsap.set(subtitleRef.current, { opacity: 1 });
-
+  
       gsap.from(logoRef.current, {
         y: 50,
         opacity: 0,
         duration: 0.5,
         ease: "expo.out",
       });
-
+  
       let splitTitle;
       SplitText.create(titleRef.current, {
         type: "words,lines",
@@ -45,7 +80,7 @@ export default function Home() {
           return splitTitle;
         }
       });
-
+  
       let splitSubtitle;
       SplitText.create(subtitleRef.current, {
         type: "words,lines",
@@ -79,13 +114,18 @@ export default function Home() {
         </div>
       </div>
 
-      <div className={styles.HeroContainer}>
+      <div className={styles.HeroContainer} ref={heroContainerRef}>
         <div className={styles.HeroTitleContainer}>
           <h1 className={styles.HeroTitle} ref={titleRef}>Stake to explore Web3 with AI. Subscribe to uncover the voices that shape it.</h1>
           <p className={styles.HeroSubtitle} ref={subtitleRef}>Our AI reduces research time on X into just <b>one prompt</b>, and increases ease of education. Projects and blockchains can subscribe for performance-ranked KOL reports driven through weekly data.</p>
           <LaunchAppButton/>
         </div>
       </div>
+
+      <div className={styles.GlobeContainer} ref={globeRef}>
+        <Globe className={styles.Globe}/>
+      </div>
+
     </main>
   );
 }
