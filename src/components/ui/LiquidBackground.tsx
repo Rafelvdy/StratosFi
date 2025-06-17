@@ -3,25 +3,18 @@
 import { useEffect, useRef, useCallback } from "react"
 import { Renderer, Triangle, Program, Mesh, Color } from "ogl"
 
-export default function LiquidBackground({ className = "" }: { className?: string }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const animateId = useRef<number | null>(null)
-  const meshRef = useRef<Mesh | null>(null)
-  const rendererRef = useRef<Renderer | null>(null)
-  const mouseRef = useRef({ x: 0.5, y: 0.5 }) // Normalized mouse position (0-1)
-  const targetMouseRef = useRef({ x: 0.5, y: 0.5 })
+// Move shader strings outside component to prevent recreation on each render
+const vertexShader = `
+  attribute vec2 uv;
+  attribute vec2 position;
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position, 0, 1);
+  }
+`
 
-  const vert = `
-    attribute vec2 uv;
-    attribute vec2 position;
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = vec4(position, 0, 1);
-    }
-  `
-
-  const frag = `
+const fragmentShader = `
     precision highp float;
 uniform float uTime;
 uniform vec3 uColor;
@@ -114,7 +107,15 @@ void main() {
   
   gl_FragColor = vec4(finalCol, 1.0);
 }
-  `
+`
+
+export default function LiquidBackground({ className = "" }: { className?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const animateId = useRef<number | null>(null)
+  const meshRef = useRef<Mesh | null>(null)
+  const rendererRef = useRef<Renderer | null>(null)
+  const mouseRef = useRef({ x: 0.5, y: 0.5 }) // Normalized mouse position (0-1)
+  const targetMouseRef = useRef({ x: 0.5, y: 0.5 })
 
   const handleMouseMove = useCallback((event: MouseEvent) => {
     const container = containerRef.current
@@ -154,7 +155,7 @@ void main() {
     ]
   }
 
-  const update = (t: number) => {
+  const update = useCallback((t: number) => {
     animateId.current = requestAnimationFrame(update)
     const mesh = meshRef.current
     const renderer = rendererRef.current
@@ -169,7 +170,7 @@ void main() {
       mesh.program.uniforms.uMouse.value = [mouseRef.current.x, mouseRef.current.y]
       renderer.render({ scene: mesh })
     }
-  }
+  }, [])
 
   useEffect(() => {
     const container = containerRef.current
@@ -200,8 +201,8 @@ void main() {
 
     const geometry = new Triangle(gl)
     const program = new Program(gl, {
-      vertex: vert,
-      fragment: frag,
+      vertex: vertexShader,
+      fragment: fragmentShader,
       uniforms: {
         uTime: { value: 0 },
         uColor: { value: new Color(0.3, 0.2, 0.5) },
@@ -228,7 +229,7 @@ void main() {
       }
       gl.getExtension("WEBGL_lose_context")?.loseContext()
     }
-  }, [handleMouseMove])
+  }, [handleMouseMove, update])
 
   return (
     <div 
