@@ -26,7 +26,7 @@ export default function Home() {
     if (!titleRef.current || !subtitleRef.current || !logoRef.current || !globeRef.current) return;
   
     // Set initial position - globe starts off-screen to the right
-    gsap.set(globeRef.current, { x: "100%" });
+    gsap.set(globeRef.current, { x: "150%" });
     
     // Also create a simple ScrollTrigger as backup
     ScrollTrigger.create({
@@ -36,7 +36,7 @@ export default function Home() {
       scrub: 1,
       markers: false,
       animation: gsap.fromTo(globeRef.current, 
-        { x: "100%" },
+        { x: "150%" },
         { x: "0%", ease: "none" }
       )
     });
