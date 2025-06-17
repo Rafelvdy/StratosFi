@@ -26,7 +26,7 @@ export default function Home() {
     if (!titleRef.current || !subtitleRef.current || !logoRef.current || !globeRef.current) return;
   
       // Set initial position off-screen
-    gsap.set(globeRef.current, { right: "50%" });
+    gsap.set(globeRef.current, { right: "-150%" });
     
     ScrollTrigger.create({
       trigger: globeRef.current,
@@ -35,7 +35,7 @@ export default function Home() {
       scrub: 1,
       markers: false,
       animation: gsap.fromTo(globeRef.current,
-        { right: "50%" },
+        { right: "-150%" },
         { 
           right: "0%", // Adjust this to center your globe properly
           ease: "none"
