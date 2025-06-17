@@ -109,12 +109,29 @@ export function Globe({
         "absolute inset-0 mx-auto aspect-[1/1] w-full max-w-[600px]",
         className,
       )}
+      style={{
+        // iOS Safari specific fixes
+        maxWidth: "min(600px, 100vw)",
+        width: "100%",
+        WebkitBackfaceVisibility: "hidden",
+        backfaceVisibility: "hidden",
+        contain: "layout style paint"
+      }}
     >
       <canvas
         className={cn(
           "size-full opacity-0 transition-opacity duration-500 [contain:layout_paint_size]",
         )}
         ref={canvasRef}
+        style={{
+          // iOS Safari specific canvas fixes
+          maxWidth: "100%",
+          WebkitBackfaceVisibility: "hidden",
+          backfaceVisibility: "hidden",
+          // Prevent canvas from being larger than viewport
+          width: "100%",
+          height: "100%"
+        }}
         onPointerDown={(e) =>
           updatePointerInteraction(
             e.clientX - pointerInteractionMovement.current,

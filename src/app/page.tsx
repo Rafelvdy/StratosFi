@@ -20,13 +20,23 @@ export default function Home() {
   const logoRef = useRef(null);
   const globeRef = useRef(null);
 
-  
-
   useEffect(() => {
     if (!titleRef.current || !subtitleRef.current || !logoRef.current || !globeRef.current) return;
   
-      // Set initial position off-screen
-    gsap.set(globeRef.current, { right: "-150%" });
+    // iOS Safari viewport height fix
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+
+    // Use transform instead of right positioning to prevent horizontal scrolling
+    gsap.set(globeRef.current, { 
+      x: "100vw", // Move off-screen to the right using transform
+      force3D: true // Enable hardware acceleration for smoother performance on iOS
+    });
     
     ScrollTrigger.create({
       trigger: subtitleRef.current,
@@ -34,15 +44,16 @@ export default function Home() {
       end: "400px center", 
       scrub: 1,
       animation: gsap.fromTo(globeRef.current,
-        { right: "-150%" },
+        { x: "100vw" }, // Start position: off-screen right
         { 
-          right: "0%", // Adjust this to center your globe properly
-          ease: "none"
+          x: "0vw", // End position: centered
+          ease: "none",
+          force3D: true
         }
       )
     });
 
-        // Initialize Lenis
+    // Initialize Lenis
     const lenis = new Lenis({
       autoRaf: true,
     });
@@ -100,6 +111,12 @@ export default function Home() {
         }
       });
     });
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('resize', setVH);
+      window.removeEventListener('orientationchange', setVH);
+    };
   }, [titleRef, subtitleRef]);
 
   return (

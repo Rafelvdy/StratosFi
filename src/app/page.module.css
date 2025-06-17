@@ -19,6 +19,8 @@
 .HeroContainer {
     width: 100%;
     height: 85vh;
+    min-height: 85vh;
+    min-height: calc(85 * var(--vh, 1vh));
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -57,25 +59,37 @@
 
 .GlobeContainer {
     height: 450px;
-    position: absolute; /* Changed from absolute to fixed */
-    bottom: 0px; /* Stays in same viewport position */
-    width: 100%;
+    position: fixed;
+    bottom: 0px;
+    width: 100vw;
+    max-width: 100vw;
+    left: 0;
+    right: 0;
     z-index: 1;
-    /* transform: translateX(100%); Initial position off-screen */
-    pointer-events: none; /* Prevent interference with scrolling */
     overflow: hidden;
+    pointer-events: none;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    contain: layout style paint;
 }
 
 .Globe {
     position: absolute;
     left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    max-width: 100vw;
+    width: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
-
 
 .StatsContainer {
     width: 100%;
     height: 100vh;
+    min-height: 100vh;
+    min-height: calc(100 * var(--vh, 1vh));
 }
 
 .StatsRow {
