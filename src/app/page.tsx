@@ -18,7 +18,6 @@ export default function Home() {
   const subtitleRef = useRef(null);
   const logoRef = useRef(null);
   const globeRef = useRef(null);
-  const heroContainerRef = useRef(null);
 
   
 
@@ -29,11 +28,11 @@ export default function Home() {
     gsap.set(globeRef.current, { right: "-150%" });
     
     ScrollTrigger.create({
-      trigger: globeRef.current,
-      start: "top center",
-      end: "bottom center", 
+      trigger: subtitleRef.current,
+      start: "bottom center",
+      end: "400px center", 
       scrub: 1,
-      markers: false,
+      markers: true,
       animation: gsap.fromTo(globeRef.current,
         { right: "-150%" },
         { 
@@ -116,7 +115,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className={styles.HeroContainer} ref={heroContainerRef}>
+      <div className={styles.HeroContainer}>
         <div className={styles.HeroTitleContainer}>
           <h1 className={styles.HeroTitle} ref={titleRef}>Stake to explore Web3 with AI. Subscribe to uncover the voices that shape it.</h1>
           <p className={styles.HeroSubtitle} ref={subtitleRef}>Our AI reduces research time on X into just <b>one prompt</b>, and increases ease of education. Projects and blockchains can subscribe for performance-ranked KOL reports driven through weekly data.</p>

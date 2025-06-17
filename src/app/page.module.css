@@ -65,9 +65,11 @@
     /* transform: translateX(100%); Initial position off-screen */
     pointer-events: none; /* Prevent interference with scrolling */
     overflow: hidden;
+    background-color: blue;
 }
 
 .Globe {
+    background-color: red;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
