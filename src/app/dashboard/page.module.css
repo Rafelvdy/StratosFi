@@ -1,0 +1,43 @@
+.DashboardContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+    background: #F5F5F5;
+}
+
+.ProfileContainer {
+    width: 80%;
+    height: 100px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.Profile {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    position: relative; /* Add this to establish positioning context */
+}
+
+.ProfileImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.WalletConnectContainer {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 999px;
+    width: 200px;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}

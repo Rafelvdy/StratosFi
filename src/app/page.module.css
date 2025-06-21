@@ -59,7 +59,7 @@
 
 .GlobeContainer {
     height: 450px;
-    position: fixed;
+    position: absolute;
     bottom: 0px;
     width: 100vw;
     max-width: 100vw;
