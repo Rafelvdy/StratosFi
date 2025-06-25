@@ -38,6 +38,21 @@
     height: 50px;
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    gap: 20px;
+}
+
+.WalletConnectText {
+    font-family: var(--font-manrope);
+    font-size: 16px;
+    pointer-events: none;
+    text-wrap: nowrap;
+}
+
+.WalletConnectIndicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #000;
 }
