@@ -10,7 +10,7 @@ export default function Dashboard() {
 
     const { setVisible } = useWalletModal();
 
-    const { connected, publicKey, connect, disconnect } = useWallet();
+    const { connected, disconnect } = useWallet();
 
     //Internal state synced with actual wallet connection
     const [isWalletConnectOpen, setIsWalletConnectOpen] = useState(connected);
