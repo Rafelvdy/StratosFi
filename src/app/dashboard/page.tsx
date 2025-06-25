@@ -1,14 +1,38 @@
 'use client';
 import styles from './page.module.css';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 
 export default function Dashboard() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [isWalletConnectOpen, setIsWalletConnectOpen] = useState(false);
+
+    const { setVisible } = useWalletModal();
+
+    const { connected, publicKey, connect, disconnect } = useWallet();
+
+    //Internal state synced with actual wallet connection
+    const [isWalletConnectOpen, setIsWalletConnectOpen] = useState(connected);
+
+    useEffect(() => {
+        setIsWalletConnectOpen(connected);
+    }, [connected]);
 
     const handleProfileClick = () => {
         setIsProfileOpen((prev) => !prev);
+    };
+
+    const handleWalletClick = async () => {
+        try {
+            if (connected) {
+                await disconnect();
+            } else {
+                setVisible(true);
+            }
+        } catch (error) {
+            console.error('Error connecting/disconnecting wallet:', error);
+        }
     };
 
     return (
@@ -23,6 +47,7 @@ export default function Dashboard() {
                             transition: 'all 0.3s ease-in-out',
                             overflow: 'hidden',
                         }}
+                        onClick={handleWalletClick}
                     >
                         <div className={styles.WalletConnectIndicator} style={{
                             opacity: isProfileOpen ? 0 : 0.8,
@@ -30,12 +55,15 @@ export default function Dashboard() {
                             background: isWalletConnectOpen ? 'green' : 'red',
                             boxShadow: isWalletConnectOpen ? '0 0 10px 0 rgba(17, 142, 40, 0.816)' : '0 0 10px 0 rgba(167, 19, 19, 0.816)',
                         }}></div>
-                        <div className={styles.WalletConnectText}
-                            style={{
-                                opacity: isProfileOpen ? 0 : 1,
-                                transition: 'opacity 0.2s ease-in-out',
-                            }}
-                        >{isWalletConnectOpen ? 'Connected' : 'Connect Wallet'}</div>
+                        <div className={styles.WalletConnectTextContainer}>
+                            <div className={styles.WalletConnectText}
+                                style={{
+                                    opacity: isProfileOpen ? 0 : 1,
+                                    transition: 'opacity 0.2s ease-in-out',
+                                }}
+                            >{isWalletConnectOpen ? 'Connected' : 'Connect Wallet'}</div>
+                            <div className={styles.ConnectPrompt}>{isWalletConnectOpen ? 'Click Here to Disconnect' : 'Click Here to Connect'}</div>
+                        </div>
                     </div>
                     <div className={styles.Profile}>
                         <Image src="/icons/pfp-icon.webp" alt="Profile" width={90} height={90} objectFit='contain' className={styles.ProfileImage} onClick={handleProfileClick} />

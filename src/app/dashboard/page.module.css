@@ -43,11 +43,15 @@
     gap: 20px;
 }
 
+.WalletConnectContainer:hover {
+    cursor: pointer;
+}
+
 .WalletConnectText {
     font-family: var(--font-manrope);
     font-size: 16px;
     pointer-events: none;
-    text-wrap: nowrap;
+    text-align: center;
 }
 
 .WalletConnectIndicator {
@@ -55,4 +59,13 @@
     height: 10px;
     border-radius: 50%;
     background: #000;
+}
+
+.ConnectPrompt {
+    font-family: var(--font-manrope);
+    font-size: 8px;
+    color: #666;
+    text-align: center;
+    letter-spacing: 0.7px;
+    pointer-events: none;
 }
