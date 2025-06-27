@@ -6,10 +6,15 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import MessageBubble from '@/components/ui/graphics/MessageBubble';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
+
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Dashboard() {
+    const router = useRouter();
     const { setVisible } = useWalletModal();
     const { connected, disconnect } = useWallet();
     //Internal state synced with actual wallet connection
@@ -72,6 +77,9 @@ export default function Dashboard() {
 
     return (
         <main>
+            <div className={styles.CornerLogoContainer}>
+                <Image src="/logos/Stratos circle logo.png" alt="Stratos Bar Logo" width={55} height={55} onClick={() => router.push('/')}/>
+            </div>
             <div className={styles.DashboardContainer}>
                 <div className={styles.WalletConnectContainer} onClick={handleWalletClick}>
                     <div className={styles.WalletConnectIndicator} style={{
