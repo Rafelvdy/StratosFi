@@ -36,5 +36,6 @@
     font-weight: 400;
     font-family: 'Inter', sans-serif;
     padding: 0px 10px;
-    font-size: 12px;
+    /* font-size: 12px; */
+    font-size: clamp(12px, 2.5vw, 16px);
 }
