@@ -148,11 +148,11 @@
     }
 }
 
-.LaunchAiButtonContainer::before {
+/* .LaunchAiButtonContainer::before {
     filter: blur(0.5rem);
     opacity: 0.45;
 
-}
+} */
 
 
 
