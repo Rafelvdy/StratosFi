@@ -29,11 +29,11 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (messageContainerRef.current && messageBubbleRefs.current.length > 0) {
-            gsap.to(messageBubbleRefs.current, {
-                opacity: 0,
-                y: 30,
-                scale: 0.9,
-            });
+            // gsap.to(messageBubbleRefs.current, {
+            //     opacity: 0,
+            //     y: 30,
+            //     scale: 0.9,
+            // });
 
             gsap.timeline({
                 ScrollTrigger: {
@@ -42,7 +42,13 @@ export default function Dashboard() {
                     end: 'bottom 20%',
                     toggleActions: 'play none none reverse',
                 }
-            }).to(messageBubbleRefs.current, {
+            }).fromTo(messageBubbleRefs.current, 
+                {
+                    opacity: 0,
+                    y: 30,
+                    scale: 0.9,
+                },
+                {
                 opacity: 1,
                 y: 0,
                 scale: 1,
