@@ -94,15 +94,20 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
-    margin-top: 10px;
+
+    margin-top: 1.3dvh;
+    /* background: rgba(0,133,255,255); */
+    height: 10dvh;
+    position: relative;
 }
 
 .LaunchAiButton {
-    background: rgba(0,133,255,255);
-    padding: 5px 50px;
+    /* background: rgba(0,133,255,255); */
+    background: white;
+    height: 35px;
+    width: 150px;
     border-radius: 999px;
-    color: white;
+    color: black;
     font-family: var(--font-manrope);
     font-size: 16px;
     font-weight: 800;
@@ -110,5 +115,42 @@
     border: none;
     cursor: pointer;
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-    
+    position: relative;
+    z-index: 2;
 } 
+
+@property --angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+
+.LaunchAiButtonContainer::after, .LaunchAiButtonContainer::before {
+    --angle: 0deg;
+    content: '';
+    position: absolute;
+    height: calc(35px + 5.5px); /* button height + extra */
+    width: calc(150px + 6px); /* button width + extra */
+    background-image: conic-gradient(from var(--angle), rgba(0,255,200,255), rgba(0,255,200,255), rgba(0,133,255,255), rgba(0,133,255,255), rgba(62,27,178,255), rgba(0,255,200,255));
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    z-index: 1;
+    animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        --angle: 360deg;
+    }
+}
+
+.LaunchAiButtonContainer::before {
+    filter: blur(0.5rem);
+    opacity: 0.45;
+
+}
+
+
+
