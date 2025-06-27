@@ -78,7 +78,7 @@ export default function Dashboard() {
     return (
         <main>
             <div className={styles.CornerLogoContainer}>
-                <Image src="/logos/Stratos circle logo.png" alt="Stratos Bar Logo" width={55} height={55} onClick={() => router.push('/')}/>
+                <Image src="/logos/Stratos Circle logo.png" alt="Stratos Bar Logo" width={55} height={55} onClick={() => router.push('/')}/>
             </div>
             <div className={styles.DashboardContainer}>
                 <div className={styles.WalletConnectContainer} onClick={handleWalletClick}>
