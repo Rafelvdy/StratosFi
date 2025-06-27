@@ -1,0 +1,36 @@
+/* @property --color-sender {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: rgb(30, 89, 140);
+}
+
+@property --color-sender {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: rgb(217, 64, 166);
+} */
+
+.MessageBubble {
+        padding: 10px;
+        border-radius: 999px;
+        width: auto;
+        max-width: 80%;
+}
+
+.sender {
+    background-color: rgb(56, 191, 221);
+    text-align: left;
+}
+
+.receiver {
+    background-color: rgb(217, 64, 166);
+    text-align: right;
+}
+
+.MessageBubbleText {
+    color: white;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    padding: 0px 10px;
+    font-size: 12px;
+}
