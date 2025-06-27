@@ -48,6 +48,13 @@ export default function Dashboard() {
                 <div className={styles.MessageContainer}>
                     <MessageBubble background='sender'>I am Stratos, your AI X research and Web3 educator assistant.</MessageBubble>
                     <MessageBubble background='receiver'>What is Solana like in the last hour?</MessageBubble>
+                    <MessageBubble background='sender'>Community Mood for SOL: 3.8/5</MessageBubble>
+                    <MessageBubble background='sender'>Key Insights:
+                        <ul>
+                            <li>Potential accumulation of SOL at lower price levels may indicate long-term confidence in the asset</li>
+                            <li>Recent price action suggests a potential bullish trend, with a 1.5% increase in the last hour</li>
+                        </ul>
+                    </MessageBubble>
                 </div>
             </div>
         </main>

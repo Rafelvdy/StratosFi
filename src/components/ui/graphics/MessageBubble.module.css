@@ -1,35 +1,36 @@
-/* @property --color-sender {
-    syntax: '<color>';
-    inherits: false;
-    initial-value: rgb(30, 89, 140);
-}
-
-@property --color-sender {
-    syntax: '<color>';
-    inherits: false;
-    initial-value: rgb(217, 64, 166);
-} */
-
 .MessageBubble {
         padding: 10px;
-        border-radius: 999px;
-        width: auto;
+        border-radius: 20px;
+        width: fit-content;
         max-width: 80%;
+        text-align: center;
+        background: white;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        color: black;
 }
 
 .sender {
-    background-color: rgb(56, 191, 221);
-    text-align: left;
+    /* background-color: rgb(56, 191, 221); */
+    /* text-align: right; */
+    /* border: 2px solid rgb(56, 191, 221); */
+    /* border: 1px solid rgb(173, 179, 180);
+    color: rgb(56, 191, 221); */
+    box-shadow: 0 0 10px 0 rgba(56, 191, 221, 0.3);
+    align-self: flex-start;
 }
 
 .receiver {
-    background-color: rgb(217, 64, 166);
-    text-align: right;
+    /* background-color: rgb(217, 64, 166); */
+    /* text-align: left; */
+    /* border: 2px solid rgb(217, 64, 166); */
+    /* border: 1px solid rgb(173, 179, 180); */
+    box-shadow: 0 0 10px 0 rgba(217, 64, 166, 0.1);
+    align-self: flex-end;
 }
 
 .MessageBubbleText {
-    color: white;
-    font-weight: 600;
+    /* color: black; */
+    font-weight: 400;
     font-family: 'Inter', sans-serif;
     padding: 0px 10px;
     font-size: 12px;
