@@ -1,21 +1,63 @@
 'use client';
 import styles from './page.module.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import MessageBubble from '@/components/ui/graphics/MessageBubble';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Dashboard() {
     const { setVisible } = useWalletModal();
-
     const { connected, disconnect } = useWallet();
-
     //Internal state synced with actual wallet connection
     const [isWalletConnectOpen, setIsWalletConnectOpen] = useState(connected);
+
+    const messageContainerRef = useRef<HTMLDivElement>(null);
+    const messageBubbleRefs = useRef<HTMLDivElement[]>([]);
 
     useEffect(() => {
         setIsWalletConnectOpen(connected);
     }, [connected]);
+
+    useEffect(() => {
+        if (messageContainerRef.current && messageBubbleRefs.current.length > 0) {
+            gsap.to(messageBubbleRefs.current, {
+                opacity: 0,
+                y: 30,
+                scale: 0.9,
+            });
+
+            gsap.timeline({
+                ScrollTrigger: {
+                    trigger:messageContainerRef.current,
+                    start: 'top 80%',
+                    end: 'bottom 20%',
+                    toggleActions: 'play none none reverse',
+                }
+            }).to(messageBubbleRefs.current, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.5,
+                stagger: 0.2,
+                ease: 'back.out(1.7)',
+            });
+        }
+
+        return () => {
+            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+        };
+    }, []);
+
+    const addToRefs = (el: HTMLDivElement) => {
+        if (el && !messageBubbleRefs.current.includes(el)) {
+            messageBubbleRefs.current.push(el);
+        }
+    };
+
     const handleWalletClick = async () => {
         try {
             if (connected) {
@@ -43,18 +85,34 @@ export default function Dashboard() {
                         <div className={styles.ConnectPrompt}>{isWalletConnectOpen ? 'Click Here to Disconnect' : 'Click Here to Connect'}</div>
                     </div>
                 </div>
-                {/* <MessageBubble background='sender'>Hello, how are you sdgafshSFhasfhasha?</MessageBubble>
-                <MessageBubble background='receiver'>Hello, how are you sdgafshSFhasfhasha?</MessageBubble> */}
-                <div className={styles.MessageContainer}>
+                <div className={styles.MessageContainer} ref={messageContainerRef}>
+                    <div ref={addToRefs} className={styles.MessageBubbleContainer}>
                     <MessageBubble background='sender'>I am Stratos, your AI X research and Web3 educator assistant.</MessageBubble>
+                    </div>
+                    <div ref={addToRefs} className={styles.MessageBubbleContainer}>
                     <MessageBubble background='receiver'>What is Solana like in the last hour?</MessageBubble>
-                    <MessageBubble background='sender'>Community Mood for SOL: 3.8/5</MessageBubble>
-                    <MessageBubble background='sender'>Key Insights:
+                    </div>
+                    <div ref={addToRefs} className={styles.MessageBubbleContainer}>
+                    <MessageBubble background='sender'>Community Mood for SOL: <span style={{ color: 'rgb(80, 200, 120)' }}>3.8</span>/5</MessageBubble>
+                    </div>
+                    <div ref={addToRefs} className={styles.MessageBubbleContainer}>
+                    <MessageBubble background='sender'><span style={{ fontWeight: 'bold' }}>Key Insights:</span>
                         <ul>
-                            <li>Potential accumulation of SOL at lower price levels may indicate long-term confidence in the asset</li>
-                            <li>Recent price action suggests a potential bullish trend, with a 1.5% increase in the last hour</li>
+                            <li>- Potential accumulation of SOL at lower price levels may indicate long-term confidence in the asset</li>
+                            <li>- Recent price action suggests a potential bullish trend, with a 1.5% increase in the last hour</li>
                         </ul>
+                        <span style={{ fontWeight: 'bold', cursor: 'pointer' }}>Show More</span>
                     </MessageBubble>
+                    </div>
+                    <div ref={addToRefs} className={styles.MessageBubbleContainer}>
+                    <MessageBubble background='sender'><span style={{ fontWeight: 'bold' }}>Key Events:</span>
+                        <ul>
+                            <li>- Binance increasing their SOL holdings</li>
+                            <li>- PayPal supercharges crypto oferring with Solana integration</li>
+                        </ul>
+                        <span style={{ fontWeight: 'bold', cursor: 'pointer' }}>Show More</span>
+                    </MessageBubble>
+                    </div>
                 </div>
             </div>
         </main>
