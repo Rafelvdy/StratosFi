@@ -17,6 +17,7 @@
     color: rgb(56, 191, 221); */
     box-shadow: 0 0 10px 0 rgba(56, 191, 221, 0.3);
     align-self: flex-start;
+    text-align: left;
 }
 
 .receiver {
@@ -26,6 +27,7 @@
     /* border: 1px solid rgb(173, 179, 180); */
     box-shadow: 0 0 10px 0 rgba(217, 64, 166, 0.1);
     align-self: flex-end;
+    text-align: right;
 }
 
 .MessageBubbleText {

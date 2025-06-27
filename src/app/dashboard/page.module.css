@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: flex-start;
     height: 100vh;
     width: 100%;
     background: #F5F5F5;
@@ -20,6 +20,7 @@
     justify-content: center;
     align-items: center;
     gap: 20px;
+    margin-top: 20px;
 }
 
 .WalletConnectContainer:hover {
@@ -50,16 +51,17 @@
 }
 
 .MessageContainer {
-    height: 500px;
-    width: 400px;
+    height: fit-content;
+    width: 80vw;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
     padding: 20px;
     border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.445);
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.3);
+    margin-top: 100px;
 }
