@@ -18,20 +18,22 @@
 
 .HeroContainer {
     width: 100%;
-    height: 85vh;
-    min-height: 85vh;
-    min-height: calc(85 * var(--vh, 1vh));
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    background: rgba(0,133,255,255);
 }
 
 .HeroTitleContainer {
+    background: red;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    /* margin-bottom: clamp(200px, 1dvh, 200px); */
+
 }
 
 .HeroTitle {
