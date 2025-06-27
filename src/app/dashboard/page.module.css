@@ -1,6 +1,6 @@
 .CornerLogoContainer {
     position: fixed;
-    bottom: 10px;
+    top: 90dvh;
     left: 10px;
     width: fit-content;
     height: fit-content;
