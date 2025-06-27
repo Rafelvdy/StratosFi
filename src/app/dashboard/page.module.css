@@ -15,7 +15,9 @@
     height: 100dvh;
     width: 100%;
     background: #F5F5F5;
-    overflow: hidden;
+    /* overflow: hidden; */
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .WalletConnectContainer {
