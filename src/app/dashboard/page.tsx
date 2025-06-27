@@ -93,7 +93,7 @@ export default function Dashboard() {
                         <div className={styles.ConnectPrompt}>{isWalletConnectOpen ? 'Click Here to Disconnect' : 'Click Here to Connect'}</div>
                     </div>
                 </div>
-                <div className={styles.MessageContainer} ref={messageContainerRef}>
+                <div className={styles.MessageContainer} ref={messageContainerRef} onClick={() => router.push('/AI')}>
                     <div ref={addToRefs} className={styles.MessageBubbleContainer}>
                     <MessageBubble background='sender'>I am Stratos, your AI X research and Web3 educator assistant.</MessageBubble>
                     </div>
@@ -121,6 +121,9 @@ export default function Dashboard() {
                         <span style={{ fontWeight: 'bold', cursor: 'pointer' }}>Show More</span>
                     </MessageBubble>
                     </div>
+                </div>
+                <div className={styles.LaunchAiButtonContainer}>
+                    <button className={styles.LaunchAiButton} onClick={() => router.push('/AI')}>Launch AI</button>
                 </div>
             </div>
         </main>
