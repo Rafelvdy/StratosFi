@@ -10,7 +10,7 @@ import { Globe } from "@/components/ui/globe";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import CountUp from "@/components/utils/CountUp";
-
+ 
 gsap.registerPlugin(SplitText);
 gsap.registerPlugin(ScrollTrigger);
 
